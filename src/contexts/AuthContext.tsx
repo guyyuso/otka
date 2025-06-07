@@ -23,82 +23,125 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        setIsAuthenticated(true);
-        fetchUserProfile(session.user.id);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (session?.user && mounted) {
+          setSupabaseUser(session.user);
+          setIsAuthenticated(true);
+          await fetchUserProfile(session.user.id, session.user.email || '');
+        }
+        
+        if (mounted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        setIsAuthenticated(true);
-        await fetchUserProfile(session.user.id);
-      } else {
-        setSupabaseUser(null);
-        setUser(null);
-        setIsAuthenticated(false);
+      if (!mounted) return;
+
+      try {
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          setIsAuthenticated(true);
+          await fetchUserProfile(session.user.id, session.user.email || '');
+        } else {
+          setSupabaseUser(null);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Error in auth state change:', error);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, email: string) => {
     try {
-      // Wait a bit for the trigger to create the profile
-      let retries = 0;
-      const maxRetries = 5;
-      
-      while (retries < maxRetries) {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
+      // Try to get the profile with a timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
 
-        if (error && error.code === 'PGRST116') {
-          // Profile doesn't exist yet, wait and retry
-          retries++;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          continue;
-        }
+      const profilePromise = supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          return;
-        }
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
 
-        if (data) {
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create a basic user object
+          console.log('Profile not found, creating basic user object');
           setUser({
-            id: data.id,
-            name: data.full_name,
-            email: supabaseUser?.email || '',
-            role: data.role,
-            createdAt: data.created_at,
-            status: data.status
+            id: userId,
+            name: email.split('@')[0] || 'User',
+            email: email,
+            role: 'user',
+            createdAt: new Date().toISOString(),
+            status: 'active'
           });
           return;
         }
-        
-        retries++;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.error('Error fetching user profile:', error);
+        return;
       }
-      
-      console.error('Failed to fetch user profile after retries');
+
+      if (data) {
+        setUser({
+          id: data.id,
+          name: data.full_name,
+          email: email,
+          role: data.role,
+          createdAt: data.created_at,
+          status: data.status
+        });
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Create a fallback user object
+      setUser({
+        id: userId,
+        name: email.split('@')[0] || 'User',
+        email: email,
+        role: 'user',
+        createdAt: new Date().toISOString(),
+        status: 'active'
+      });
     }
   };
 
   const login = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -111,11 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (email: string, password: string, fullName: string): Promise<{ error?: string }> => {
     try {
+      setLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -130,7 +176,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: error.message };
       }
 
-      // If user is created successfully, the trigger should handle profile creation
       if (data.user) {
         console.log('User created successfully:', data.user.id);
       }
@@ -139,11 +184,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Registration error:', error);
       return { error: 'An unexpected error occurred during registration' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const isAdmin = (): boolean => {

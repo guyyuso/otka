@@ -11,7 +11,8 @@ const DashboardPage: React.FC = () => {
   const { recentlyUsed, mainApps, loading } = useAppData();
   const { loading: authLoading } = useAuth();
 
-  if (authLoading || loading) {
+  // Show loading only if auth is still loading
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -42,7 +43,12 @@ const DashboardPage: React.FC = () => {
           </button>
         </div>
 
-        {!hasApps ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading applications...</p>
+          </div>
+        ) : !hasApps ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Plus className="w-12 h-12 text-gray-400" />
