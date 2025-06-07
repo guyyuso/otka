@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { MoreVertical, Link as LinkIcon, Edit, Key, Trash, ExternalLink } from 'lucide-react';
 import { AppData } from '../types';
+import { useAppData } from '../contexts/AppDataContext';
 import useClickOutside from '../hooks/useClickOutside';
 
 interface AppTileProps {
@@ -11,6 +12,7 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { removeApp, updateLastUsed } = useAppData();
   
   useClickOutside(menuRef, () => {
     if (menuOpen) setMenuOpen(false);
@@ -21,8 +23,9 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
     setMenuOpen(!menuOpen);
   };
 
-  const handleAppClick = () => {
+  const handleAppClick = async () => {
     if (!editMode) {
+      await updateLastUsed(app.id);
       window.open(app.url, '_blank');
     }
   };
@@ -33,9 +36,17 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
     setMenuOpen(false);
   };
 
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('האם אתה בטוח שברצונך למחוק את האפליקציה הזו?')) {
+      await removeApp(app.id);
+    }
+    setMenuOpen(false);
+  };
+
   return (
     <div 
-      className={`bg-white rounded-xl shadow-sm overflow-hidden relative transition-all duration-200 ${
+      className={`bg-white rounded-xl shadow-sm overflow-hidden relative transition-all duration-200 cursor-pointer ${
         editMode ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
       }`}
       onClick={handleAppClick}
@@ -59,7 +70,10 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
                 <LinkIcon size={16} className="ml-2 text-blue-500" />
                 <span>שנה URL</span>
               </button>
-              <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <button 
+                onClick={handleEditClick}
+                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
                 <Edit size={16} className="ml-2 text-green-500" />
                 <span>ערוך פרטים</span>
               </button>
@@ -67,7 +81,10 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
                 <Key size={16} className="ml-2 text-orange-500" />
                 <span>עדכן סיסמה</span>
               </button>
-              <button className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100">
+              <button 
+                onClick={handleDeleteClick}
+                className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100"
+              >
                 <Trash size={16} className="ml-2" />
                 <span>הסר</span>
               </button>
@@ -76,11 +93,23 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
         </div>
         
         <div className="p-4 flex items-center justify-center h-32">
-          <img 
-            src={app.logo} 
-            alt={app.name} 
-            className="max-h-16 max-w-32 object-contain"
-          />
+          {app.logo ? (
+            <img 
+              src={app.logo} 
+              alt={app.name} 
+              className="max-h-16 max-w-32 object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center ${app.logo ? 'hidden' : ''}`}>
+            <span className="text-blue-600 font-semibold text-lg">
+              {app.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
         </div>
       </div>
       

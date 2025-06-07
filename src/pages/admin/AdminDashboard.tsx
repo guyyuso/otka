@@ -1,15 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Apple as Apps, Shield, Activity } from 'lucide-react';
 import Header from '../../components/Header';
+import { supabase } from '../../lib/supabase';
 import { AdminStats } from '../../types';
 
 const AdminDashboard: React.FC = () => {
-  // Mock stats data
-  const stats: AdminStats = {
-    totalUsers: 156,
-    activeUsers: 89,
-    totalApps: 24,
-    loginAttempts: 1243
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalApps: 0,
+    loginAttempts: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+
+      // Get total users
+      const { count: totalUsers } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Get active users
+      const { count: activeUsers } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      // Get total apps
+      const { count: totalApps } = await supabase
+        .from('applications')
+        .select('*', { count: 'exact', head: true });
+
+      setStats({
+        totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
+        totalApps: totalApps || 0,
+        loginAttempts: 0 // This would require auth logs which aren't easily accessible
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const statCards = [
@@ -18,6 +56,20 @@ const AdminDashboard: React.FC = () => {
     { title: 'אפליקציות', value: stats.totalApps, icon: Apps, color: 'purple' },
     { title: 'ניסיונות כניסה', value: stats.loginAttempts, icon: Shield, color: 'orange' }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Header />
+        <main className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">טוען נתונים...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -47,42 +99,22 @@ const AdminDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">משתמשים אחרונים</h2>
+            <h2 className="text-lg font-semibold mb-4">פעילות אחרונה</h2>
             <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium">
-                      {String.fromCharCode(65 + i)}
-                    </div>
-                    <div className="mr-3">
-                      <p className="font-medium text-gray-900">משתמש {i + 1}</p>
-                      <p className="text-sm text-gray-500">user{i + 1}@example.com</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">לפני {i + 1} שעות</span>
-                </div>
-              ))}
+              <div className="text-center py-8 text-gray-500">
+                <Shield className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>נתוני פעילות יוצגו כאן</p>
+              </div>
             </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">התראות אבטחה אחרונות</h2>
+            <h2 className="text-lg font-semibold mb-4">התראות מערכת</h2>
             <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                      <Shield className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div className="mr-3">
-                      <p className="font-medium text-gray-900">ניסיון כניסה חשוד</p>
-                      <p className="text-sm text-gray-500">IP: 192.168.1.{i + 1}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">לפני {i * 10 + 5} דקות</span>
-                </div>
-              ))}
+              <div className="text-center py-8 text-gray-500">
+                <Activity className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>התראות יוצגו כאן</p>
+              </div>
             </div>
           </div>
         </div>
