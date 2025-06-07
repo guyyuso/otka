@@ -52,27 +52,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // Wait a bit for the trigger to create the profile
+      let retries = 0;
+      const maxRetries = 5;
+      
+      while (retries < maxRetries) {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
+        if (error && error.code === 'PGRST116') {
+          // Profile doesn't exist yet, wait and retry
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
 
-      if (data) {
-        setUser({
-          id: data.id,
-          name: data.full_name,
-          email: supabaseUser?.email || '',
-          role: data.role,
-          createdAt: data.created_at,
-          status: data.status
-        });
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          return;
+        }
+
+        if (data) {
+          setUser({
+            id: data.id,
+            name: data.full_name,
+            email: supabaseUser?.email || '',
+            role: data.role,
+            createdAt: data.created_at,
+            status: data.status
+          });
+          return;
+        }
+        
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
+      
+      console.error('Failed to fetch user profile after retries');
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -97,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (email: string, password: string, fullName: string): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -111,9 +130,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: error.message };
       }
 
+      // If user is created successfully, the trigger should handle profile creation
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
+      }
+
       return {};
     } catch (error) {
-      return { error: 'An unexpected error occurred' };
+      console.error('Registration error:', error);
+      return { error: 'An unexpected error occurred during registration' };
     }
   };
 
