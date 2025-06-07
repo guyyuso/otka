@@ -47,7 +47,7 @@ const UsersManagement: React.FC = () => {
         return {
           id: profile.id,
           name: profile.full_name,
-          email: authUser?.email || 'לא זמין',
+          email: authUser?.email || 'Not available',
           role: profile.role,
           createdAt: profile.created_at,
           lastLogin: authUser?.last_sign_in_at || undefined,
@@ -100,7 +100,7 @@ const UsersManagement: React.FC = () => {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק את המשתמש? פעולה זו לא ניתנת לביטול.')) {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       return;
     }
 
@@ -137,7 +137,7 @@ const UsersManagement: React.FC = () => {
         </button>
         
         {isOpen && (
-          <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
             <div className="py-1" role="menu">
               <button
                 onClick={() => {
@@ -145,10 +145,10 @@ const UsersManagement: React.FC = () => {
                   setShowEditModal(true);
                   setIsOpen(false);
                 }}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-right"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
-                <Edit className="ml-2 w-4 h-4 text-blue-500" />
-                ערוך פרטים
+                <Edit className="mr-2 w-4 h-4 text-blue-500" />
+                Edit Details
               </button>
               
               <button
@@ -156,10 +156,10 @@ const UsersManagement: React.FC = () => {
                   updateUserRole(user.id, user.role === 'admin' ? 'user' : 'admin');
                   setIsOpen(false);
                 }}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-right"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
-                <Shield className="ml-2 w-4 h-4 text-purple-500" />
-                {user.role === 'admin' ? 'הסר הרשאות מנהל' : 'הפוך למנהל'}
+                <Shield className="mr-2 w-4 h-4 text-purple-500" />
+                {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
               </button>
               
               <button
@@ -167,10 +167,10 @@ const UsersManagement: React.FC = () => {
                   updateUserStatus(user.id, user.status === 'active' ? 'suspended' : 'active');
                   setIsOpen(false);
                 }}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-right"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
-                <Ban className="ml-2 w-4 h-4 text-orange-500" />
-                {user.status === 'active' ? 'השהה משתמש' : 'הפעל משתמש'}
+                <Ban className="mr-2 w-4 h-4 text-orange-500" />
+                {user.status === 'active' ? 'Suspend User' : 'Activate User'}
               </button>
               
               <button
@@ -178,10 +178,10 @@ const UsersManagement: React.FC = () => {
                   deleteUser(user.id);
                   setIsOpen(false);
                 }}
-                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-right"
+                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
               >
-                <Trash className="ml-2 w-4 h-4" />
-                מחק משתמש
+                <Trash className="mr-2 w-4 h-4" />
+                Delete User
               </button>
             </div>
           </div>
@@ -230,7 +230,7 @@ const UsersManagement: React.FC = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">ערוך משתמש</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Edit User</h2>
             <button
               onClick={() => setShowEditModal(false)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -242,7 +242,7 @@ const UsersManagement: React.FC = () => {
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                שם מלא
+                Full Name
               </label>
               <input
                 type="text"
@@ -255,30 +255,30 @@ const UsersManagement: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                תפקיד
+                Role
               </label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as 'user' | 'admin' })}
                 className="block w-full py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="user">משתמש</option>
-                <option value="admin">מנהל</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                סטטוס
+                Status
               </label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' | 'suspended' })}
                 className="block w-full py-3 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="active">פעיל</option>
-                <option value="inactive">לא פעיל</option>
-                <option value="suspended">מושהה</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
               </select>
             </div>
 
@@ -288,13 +288,13 @@ const UsersManagement: React.FC = () => {
                 onClick={() => setShowEditModal(false)}
                 className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                ביטול
+                Cancel
               </button>
               <button
                 type="submit"
                 className="flex-1 py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
               >
-                שמור שינויים
+                Save Changes
               </button>
             </div>
           </form>
@@ -309,19 +309,19 @@ const UsersManagement: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">ניהול משתמשים</h1>
-            <p className="text-gray-600">ניהול והרשאות משתמשים במערכת</p>
+            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-600">Manage users and permissions</p>
           </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="חיפוש משתמשים..."
-                className="w-full pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Search users..."
+                className="w-full pl-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -331,27 +331,27 @@ const UsersManagement: React.FC = () => {
           {loading ? (
             <div className="p-8 text-center">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">טוען משתמשים...</p>
+              <p className="text-gray-600">Loading users...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      משתמש
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      תפקיד
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      סטטוס
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      כניסה אחרונה
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Last Login
                     </th>
                     <th scope="col" className="relative px-6 py-3">
-                      <span className="sr-only">פעולות</span>
+                      <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
@@ -363,7 +363,7 @@ const UsersManagement: React.FC = () => {
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <User className="w-5 h-5 text-blue-600" />
                           </div>
-                          <div className="mr-4">
+                          <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                             <div className="text-sm text-gray-500">{user.email}</div>
                           </div>
@@ -373,7 +373,7 @@ const UsersManagement: React.FC = () => {
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.role === 'admin' ? 'מנהל' : 'משתמש'}
+                          {user.role === 'admin' ? 'Admin' : 'User'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -382,12 +382,12 @@ const UsersManagement: React.FC = () => {
                           user.status === 'suspended' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.status === 'active' ? 'פעיל' : 
-                           user.status === 'suspended' ? 'מושהה' : 'לא פעיל'}
+                          {user.status === 'active' ? 'Active' : 
+                           user.status === 'suspended' ? 'Suspended' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('he-IL') : 'מעולם לא'}
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <UserActionMenu user={user} />

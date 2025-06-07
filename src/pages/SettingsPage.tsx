@@ -13,61 +13,61 @@ const SettingsPage: React.FC = () => {
   const settingsSections = [
     {
       id: 'security',
-      title: 'אבטחה',
+      title: 'Security',
       icon: <Shield className="w-5 h-5 text-blue-600" />,
       items: [
-        { id: 'password', label: 'שינוי סיסמה' },
-        { id: 'mfa', label: 'אימות דו-שלבי' },
-        { id: 'sessions', label: 'התקנים מחוברים' }
+        { id: 'password', label: 'Change Password' },
+        { id: 'mfa', label: 'Two-Factor Authentication' },
+        { id: 'sessions', label: 'Connected Devices' }
       ]
     },
     {
       id: 'passwords',
-      title: 'ניהול סיסמאות',
+      title: 'Password Management',
       icon: <Lock className="w-5 h-5 text-green-600" />,
       items: [
-        { id: 'generate', label: 'יצירת סיסמה חזקה' },
-        { id: 'audit', label: 'בדיקת חוזק סיסמאות' },
-        { id: 'export', label: 'ייצוא סיסמאות' }
+        { id: 'generate', label: 'Generate Strong Password' },
+        { id: 'audit', label: 'Password Strength Audit' },
+        { id: 'export', label: 'Export Passwords' }
       ]
     },
     {
       id: 'notifications',
-      title: 'התראות',
+      title: 'Notifications',
       icon: <Bell className="w-5 h-5 text-yellow-600" />,
       items: [
-        { id: 'login-alerts', label: 'התראות כניסה' },
-        { id: 'security-alerts', label: 'התראות אבטחה' },
-        { id: 'updates', label: 'עדכוני מערכת' }
+        { id: 'login-alerts', label: 'Login Alerts' },
+        { id: 'security-alerts', label: 'Security Alerts' },
+        { id: 'updates', label: 'System Updates' }
       ]
     },
     {
       id: 'devices',
-      title: 'מכשירים',
+      title: 'Devices',
       icon: <Smartphone className="w-5 h-5 text-purple-600" />,
       items: [
-        { id: 'manage-devices', label: 'ניהול מכשירים' },
-        { id: 'trusted-devices', label: 'מכשירים מהימנים' }
+        { id: 'manage-devices', label: 'Manage Devices' },
+        { id: 'trusted-devices', label: 'Trusted Devices' }
       ]
     },
     {
       id: 'account',
-      title: 'חשבון',
+      title: 'Account',
       icon: <UserCog className="w-5 h-5 text-gray-600" />,
       items: [
-        { id: 'profile', label: 'פרטי פרופיל' },
-        { id: 'preferences', label: 'העדפות' },
-        { id: 'delete-account', label: 'מחיקת חשבון' }
+        { id: 'profile', label: 'Profile Details' },
+        { id: 'preferences', label: 'Preferences' },
+        { id: 'delete-account', label: 'Delete Account' }
       ]
     },
     {
       id: 'activity',
-      title: 'פעילות ודוחות',
+      title: 'Activity & Reports',
       icon: <History className="w-5 h-5 text-orange-600" />,
       items: [
-        { id: 'login-history', label: 'היסטוריית כניסות' },
-        { id: 'app-usage', label: 'שימוש באפליקציות' },
-        { id: 'reports', label: 'דוחות מפורטים' }
+        { id: 'login-history', label: 'Login History' },
+        { id: 'app-usage', label: 'Application Usage' },
+        { id: 'reports', label: 'Detailed Reports' }
       ]
     }
   ];
@@ -77,8 +77,8 @@ const SettingsPage: React.FC = () => {
       <Header />
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">הגדרות</h1>
-          <p className="text-gray-600">ניהול האבטחה והעדפות המערכת</p>
+          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+          <p className="text-gray-600">Manage security and system preferences</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -86,17 +86,17 @@ const SettingsPage: React.FC = () => {
             <div key={section.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
                 {section.icon}
-                <h2 className="text-lg font-medium text-gray-900 mr-2">{section.title}</h2>
+                <h2 className="text-lg font-medium text-gray-900 ml-2">{section.title}</h2>
               </div>
               <div className="divide-y divide-gray-200">
                 {section.items.map((item) => (
                   <button
                     key={item.id}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-right"
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left"
                   >
                     <span className="text-gray-800">{item.label}</span>
                     <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
                 ))}

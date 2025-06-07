@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import NotesPage from './pages/NotesPage';
+import DownloadsPage from './pages/DownloadsPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UsersManagement from './pages/admin/UsersManagement';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -16,7 +18,7 @@ function App() {
     <Router>
       <AuthProvider>
         <AppDataProvider>
-          <div className="app" dir="rtl">
+          <div className="app">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -25,6 +27,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/notes" 
+                element={
+                  <ProtectedRoute>
+                    <NotesPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/downloads" 
+                element={
+                  <ProtectedRoute>
+                    <DownloadsPage />
                   </ProtectedRoute>
                 } 
               />

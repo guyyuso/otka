@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
         navigate('/');
       }
     } catch (err) {
-      setError('שגיאה בהתחברות');
+      setError('Login error');
     } finally {
       setIsLoading(false);
     }
@@ -40,8 +40,8 @@ const LoginPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">כניסה למערכת</h1>
-          <p className="text-gray-600 mt-2">התחבר עם החשבון שלך</p>
+          <h1 className="text-2xl font-bold text-gray-800">Sign In</h1>
+          <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
 
         {error && (
@@ -53,46 +53,44 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              אימייל
+              Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Key className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="email"
                 type="email"
                 required
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="user@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                dir="ltr"
               />
             </div>
           </div>
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              סיסמה
+              Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                className="block w-full pr-10 pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                dir="ltr"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 left-0 flex items-center pl-3"
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -112,12 +110,12 @@ const LoginPage: React.FC = () => {
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="mr-2 block text-sm text-gray-700">
-                זכור אותי
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                Remember me
               </label>
             </div>
             <button type="button" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              שכחת סיסמה?
+              Forgot password?
             </button>
           </div>
 
@@ -130,16 +128,16 @@ const LoginPage: React.FC = () => {
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'התחבר'
+                'Sign In'
               )}
             </button>
           </div>
 
           <div className="text-center">
             <span className="text-sm text-gray-600">
-              אין לך חשבון?{' '}
+              Don't have an account?{' '}
               <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                הירשם כאן
+                Sign up here
               </Link>
             </span>
           </div>

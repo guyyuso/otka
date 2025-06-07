@@ -28,19 +28,19 @@ const RegisterPage: React.FC = () => {
 
   const validateForm = () => {
     if (!formData.fullName.trim()) {
-      setError('שם מלא הוא שדה חובה');
+      setError('Full name is required');
       return false;
     }
     if (!formData.email.trim()) {
-      setError('אימייל הוא שדה חובה');
+      setError('Email is required');
       return false;
     }
     if (formData.password.length < 6) {
-      setError('הסיסמה חייבת להכיל לפחות 6 תווים');
+      setError('Password must be at least 6 characters');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('הסיסמאות אינן תואמות');
+      setError('Passwords do not match');
       return false;
     }
     return true;
@@ -63,13 +63,13 @@ const RegisterPage: React.FC = () => {
       if (result.error) {
         setError(result.error);
       } else {
-        setSuccess('החשבון נוצר בהצלחה! אתה יכול להתחבר עכשיו.');
+        setSuccess('Account created successfully! You can now sign in.');
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       }
     } catch (err) {
-      setError('שגיאה ביצירת החשבון');
+      setError('Error creating account');
     } finally {
       setIsLoading(false);
     }
@@ -82,8 +82,8 @@ const RegisterPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">הרשמה למערכת</h1>
-          <p className="text-gray-600 mt-2">צור חשבון חדש</p>
+          <h1 className="text-2xl font-bold text-gray-800">Sign Up</h1>
+          <p className="text-gray-600 mt-2">Create a new account</p>
         </div>
 
         {error && (
@@ -101,10 +101,10 @@ const RegisterPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-              שם מלא
+              Full Name
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <User className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -112,8 +112,8 @@ const RegisterPage: React.FC = () => {
                 name="fullName"
                 type="text"
                 required
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="הכנס שם מלא"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Enter full name"
                 value={formData.fullName}
                 onChange={handleChange}
               />
@@ -122,10 +122,10 @@ const RegisterPage: React.FC = () => {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              אימייל
+              Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -133,21 +133,20 @@ const RegisterPage: React.FC = () => {
                 name="email"
                 type="email"
                 required
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="user@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                dir="ltr"
               />
             </div>
           </div>
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              סיסמה
+              Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -155,15 +154,14 @@ const RegisterPage: React.FC = () => {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                className="block w-full pr-10 pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
-                dir="ltr"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 left-0 flex items-center pl-3"
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -177,10 +175,10 @@ const RegisterPage: React.FC = () => {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              אימות סיסמה
+              Confirm Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -188,15 +186,14 @@ const RegisterPage: React.FC = () => {
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 required
-                className="block w-full pr-10 pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                dir="ltr"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 left-0 flex items-center pl-3"
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -217,16 +214,16 @@ const RegisterPage: React.FC = () => {
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'הירשם'
+                'Sign Up'
               )}
             </button>
           </div>
 
           <div className="text-center">
             <span className="text-sm text-gray-600">
-              יש לך כבר חשבון?{' '}
+              Already have an account?{' '}
               <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                התחבר כאן
+                Sign in here
               </Link>
             </span>
           </div>

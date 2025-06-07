@@ -29,17 +29,17 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      setError('שם האפליקציה הוא שדה חובה');
+      setError('Application name is required');
       return false;
     }
     if (!formData.url.trim()) {
-      setError('כתובת URL היא שדה חובה');
+      setError('URL is required');
       return false;
     }
     try {
       new URL(formData.url);
     } catch {
-      setError('כתובת URL לא תקינה');
+      setError('Invalid URL format');
       return false;
     }
     return true;
@@ -67,7 +67,7 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
       });
       onClose();
     } catch (err) {
-      setError('שגיאה בהוספת האפליקציה');
+      setError('Error adding application');
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +92,7 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">הוסף אפליקציה חדשה</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Add New Application</h2>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -110,10 +110,10 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
 
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              שם האפליקציה *
+              Application Name *
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Plus className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -121,8 +121,8 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
                 name="name"
                 type="text"
                 required
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="למשל: Gmail, Slack, Office 365"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="e.g., Gmail, Slack, Office 365"
                 value={formData.name}
                 onChange={handleChange}
               />
@@ -131,10 +131,10 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
 
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
-              כתובת URL *
+              URL *
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Globe className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -142,50 +142,48 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
                 name="url"
                 type="url"
                 required
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="https://example.com"
                 value={formData.url}
                 onChange={handleChange}
-                dir="ltr"
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1">
-              כתובת לוגו (אופציונלי)
+              Logo URL (Optional)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Image className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="logo"
                 name="logo"
                 type="url"
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="https://example.com/logo.png"
                 value={formData.logo}
                 onChange={handleChange}
-                dir="ltr"
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              שם משתמש (אופציונלי)
+              Username (Optional)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <User className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="username"
                 name="username"
                 type="text"
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="שם משתמש או אימייל"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Username or email"
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -194,28 +192,27 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              סיסמה (אופציונלי)
+              Password (Optional)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="password"
                 name="password"
                 type="password"
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="block w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
-                dir="ltr"
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-              קטגוריה
+              Category
             </label>
             <select
               id="category"
@@ -224,14 +221,14 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
               value={formData.category}
               onChange={handleChange}
             >
-              <option value="general">כללי</option>
-              <option value="productivity">פרודוקטיביות</option>
-              <option value="communication">תקשורת</option>
-              <option value="development">פיתוח</option>
-              <option value="design">עיצוב</option>
-              <option value="finance">כספים</option>
-              <option value="hr">משאבי אנוש</option>
-              <option value="marketing">שיווק</option>
+              <option value="general">General</option>
+              <option value="productivity">Productivity</option>
+              <option value="communication">Communication</option>
+              <option value="development">Development</option>
+              <option value="design">Design</option>
+              <option value="finance">Finance</option>
+              <option value="hr">Human Resources</option>
+              <option value="marketing">Marketing</option>
             </select>
           </div>
 
@@ -241,7 +238,7 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
               onClick={handleClose}
               className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
-              ביטול
+              Cancel
             </button>
             <button
               type="submit"
@@ -251,7 +248,7 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
               ) : (
-                'הוסף אפליקציה'
+                'Add Application'
               )}
             </button>
           </div>

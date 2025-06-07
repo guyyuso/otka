@@ -51,10 +51,10 @@ const AdminDashboard: React.FC = () => {
   };
 
   const statCards = [
-    { title: 'משתמשים', value: stats.totalUsers, icon: Users, color: 'blue' },
-    { title: 'משתמשים פעילים', value: stats.activeUsers, icon: Activity, color: 'green' },
-    { title: 'אפליקציות', value: stats.totalApps, icon: Apps, color: 'purple' },
-    { title: 'ניסיונות כניסה', value: stats.loginAttempts, icon: Shield, color: 'orange' }
+    { title: 'Users', value: stats.totalUsers, icon: Users, color: 'blue' },
+    { title: 'Active Users', value: stats.activeUsers, icon: Activity, color: 'green' },
+    { title: 'Applications', value: stats.totalApps, icon: Apps, color: 'purple' },
+    { title: 'Login Attempts', value: stats.loginAttempts, icon: Shield, color: 'orange' }
   ];
 
   if (loading) {
@@ -64,7 +64,7 @@ const AdminDashboard: React.FC = () => {
         <main className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">טוען נתונים...</p>
+            <p className="text-gray-600">Loading data...</p>
           </div>
         </main>
       </div>
@@ -76,8 +76,8 @@ const AdminDashboard: React.FC = () => {
       <Header />
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">לוח בקרה למנהל</h1>
-          <p className="text-gray-600">סקירה כללית של המערכת</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">System overview and management</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -99,21 +99,21 @@ const AdminDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">פעילות אחרונה</h2>
+            <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
             <div className="space-y-4">
               <div className="text-center py-8 text-gray-500">
                 <Shield className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>נתוני פעילות יוצגו כאן</p>
+                <p>Activity data will be displayed here</p>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">התראות מערכת</h2>
+            <h2 className="text-lg font-semibold mb-4">System Alerts</h2>
             <div className="space-y-4">
               <div className="text-center py-8 text-gray-500">
                 <Activity className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>התראות יוצגו כאן</p>
+                <p>Alerts will be displayed here</p>
               </div>
             </div>
           </div>
