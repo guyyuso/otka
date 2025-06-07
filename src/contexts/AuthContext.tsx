@@ -82,11 +82,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const createFallbackUser = (userId: string, email: string): User => {
+    return {
+      id: userId,
+      name: email.split('@')[0] || 'User',
+      email: email,
+      role: 'user',
+      createdAt: new Date().toISOString(),
+      status: 'active'
+    };
+  };
+
   const fetchUserProfile = async (userId: string, email: string) => {
     try {
-      // Try to get the profile with a timeout
+      // Always create a fallback user first to ensure consistent state
+      const fallbackUser = createFallbackUser(userId, email);
+      setUser(fallbackUser);
+
+      // Try to get the profile with a shorter timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
       );
 
       const profilePromise = supabase
@@ -99,16 +114,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // Profile doesn't exist, create a basic user object
-          console.log('Profile not found, creating basic user object');
-          setUser({
-            id: userId,
-            name: email.split('@')[0] || 'User',
-            email: email,
-            role: 'user',
-            createdAt: new Date().toISOString(),
-            status: 'active'
-          });
+          // Profile doesn't exist, keep the fallback user
+          console.log('Profile not found, using fallback user object');
+          return;
+        }
+        if (error.message === 'Profile fetch timeout') {
+          console.warn('Profile fetch timed out, using fallback user');
           return;
         }
         console.error('Error fetching user profile:', error);
@@ -116,44 +127,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
+        // Update with actual profile data
         setUser({
           id: data.id,
           name: data.full_name,
           email: email,
-          role: data.role,
+          role: data.role || 'user',
           createdAt: data.created_at,
-          status: data.status
+          status: data.status || 'active'
         });
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      // Create a fallback user object
-      setUser({
-        id: userId,
-        name: email.split('@')[0] || 'User',
-        email: email,
-        role: 'user',
-        createdAt: new Date().toISOString(),
-        status: 'active'
-      });
+      // Ensure we always have a user object when authenticated
+      if (!user) {
+        setUser(createFallbackUser(userId, email));
+      }
     }
   };
 
   const login = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
       setLoading(true);
+      
+      // Validate input
+      if (!email || !password) {
+        return { error: 'Email and password are required' };
+      }
+
+      if (!email.includes('@')) {
+        return { error: 'Please enter a valid email address' };
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password
       });
 
       if (error) {
+        // Provide more user-friendly error messages
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: 'Invalid email or password. Please check your credentials and try again.' };
+        }
+        if (error.message.includes('Email not confirmed')) {
+          return { error: 'Please check your email and click the confirmation link before signing in.' };
+        }
         return { error: error.message };
       }
 
       return {};
     } catch (error) {
-      return { error: 'An unexpected error occurred' };
+      console.error('Login error:', error);
+      return { error: 'An unexpected error occurred. Please try again.' };
     } finally {
       setLoading(false);
     }
@@ -162,17 +187,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string, fullName: string): Promise<{ error?: string }> => {
     try {
       setLoading(true);
+      
+      // Validate input
+      if (!email || !password || !fullName) {
+        return { error: 'All fields are required' };
+      }
+
+      if (!email.includes('@')) {
+        return { error: 'Please enter a valid email address' };
+      }
+
+      if (password.length < 6) {
+        return { error: 'Password must be at least 6 characters long' };
+      }
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName.trim()
           }
         }
       });
 
       if (error) {
+        if (error.message.includes('User already registered')) {
+          return { error: 'An account with this email already exists. Please sign in instead.' };
+        }
         return { error: error.message };
       }
 
@@ -185,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('user_profiles')
             .insert({
               id: data.user.id,
-              full_name: fullName,
+              full_name: fullName.trim(),
               role: 'user',
               status: 'active'
             });
@@ -205,7 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     } catch (error) {
       console.error('Registration error:', error);
-      return { error: 'An unexpected error occurred during registration' };
+      return { error: 'An unexpected error occurred during registration. Please try again.' };
     } finally {
       setLoading(false);
     }
@@ -213,9 +255,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async (): Promise<void> => {
     try {
+      setLoading(true);
       await supabase.auth.signOut();
+      // Clear user state immediately
+      setUser(null);
+      setSupabaseUser(null);
+      setIsAuthenticated(false);
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
