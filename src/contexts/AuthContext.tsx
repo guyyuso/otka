@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Try to get the profile with a timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 30000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
       );
 
       const profilePromise = supabase
@@ -178,6 +178,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         console.log('User created successfully:', data.user.id);
+        
+        // Create user profile immediately after successful registration
+        try {
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: data.user.id,
+              full_name: fullName,
+              role: 'user',
+              status: 'active'
+            });
+
+          if (profileError) {
+            console.error('Error creating user profile:', profileError);
+            // Don't return error here as the user was created successfully
+            // The profile will be created as a fallback in fetchUserProfile
+          } else {
+            console.log('User profile created successfully');
+          }
+        } catch (profileError) {
+          console.error('Error creating user profile:', profileError);
+        }
       }
 
       return {};

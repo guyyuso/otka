@@ -9,6 +9,7 @@ const NotesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [existingNoteId, setExistingNoteId] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -33,17 +34,31 @@ const NotesPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('user_notes')
-        .select('content')
+        .select('id, content, updated_at')
         .eq('user_id', user.id)
-        .single();
+        .order('updated_at', { ascending: false });
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error loading notes:', error);
         return;
       }
 
-      if (data) {
-        setNotes(data.content || '');
+      if (data && data.length > 0) {
+        // Get the most recent note
+        const mostRecentNote = data[0];
+        setNotes(mostRecentNote.content || '');
+        setExistingNoteId(mostRecentNote.id);
+        
+        // If there are multiple notes, we should clean up duplicates
+        if (data.length > 1) {
+          console.log('Found multiple notes, keeping the most recent one');
+          // Optionally, you could delete the older notes here
+          // const olderNoteIds = data.slice(1).map(note => note.id);
+          // await supabase.from('user_notes').delete().in('id', olderNoteIds);
+        }
+      } else {
+        setNotes('');
+        setExistingNoteId(null);
       }
     } catch (error) {
       console.error('Error loading notes:', error);
@@ -55,17 +70,40 @@ const NotesPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_notes')
-        .upsert({
-          user_id: user.id,
-          content: notes,
-          updated_at: new Date().toISOString()
-        });
+      if (existingNoteId) {
+        // Update existing note
+        const { error } = await supabase
+          .from('user_notes')
+          .update({
+            content: notes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingNoteId);
 
-      if (error) {
-        console.error('Error saving notes:', error);
-        return;
+        if (error) {
+          console.error('Error updating notes:', error);
+          return;
+        }
+      } else {
+        // Create new note
+        const { data, error } = await supabase
+          .from('user_notes')
+          .insert({
+            user_id: user.id,
+            content: notes,
+            updated_at: new Date().toISOString()
+          })
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('Error creating notes:', error);
+          return;
+        }
+
+        if (data) {
+          setExistingNoteId(data.id);
+        }
       }
 
       setLastSaved(new Date());
