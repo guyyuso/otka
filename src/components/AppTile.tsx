@@ -53,8 +53,12 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
     setMenuOpen(false);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
   };
 
   return (

@@ -50,11 +50,18 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const colorClasses = {
+    blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
+    green: { bg: 'bg-green-100', text: 'text-green-600' },
+    purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
+    orange: { bg: 'bg-orange-100', text: 'text-orange-600' }
+  };
+
   const statCards = [
-    { title: 'Users', value: stats.totalUsers, icon: Users, color: 'blue' },
-    { title: 'Active Users', value: stats.activeUsers, icon: Activity, color: 'green' },
-    { title: 'Applications', value: stats.totalApps, icon: Apps, color: 'purple' },
-    { title: 'Login Attempts', value: stats.loginAttempts, icon: Shield, color: 'orange' }
+    { title: 'Users', value: stats.totalUsers, icon: Users, color: 'blue' as const },
+    { title: 'Active Users', value: stats.activeUsers, icon: Activity, color: 'green' as const },
+    { title: 'Applications', value: stats.totalApps, icon: Apps, color: 'purple' as const },
+    { title: 'Login Attempts', value: stats.loginAttempts, icon: Shield, color: 'orange' as const }
   ];
 
   if (loading) {
@@ -86,8 +93,8 @@ const AdminDashboard: React.FC = () => {
             return (
               <div key={stat.title} className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-lg bg-${stat.color}-100`}>
-                    <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+                  <div className={`p-3 rounded-lg ${colorClasses[stat.color].bg}`}>
+                    <Icon className={`w-6 h-6 ${colorClasses[stat.color].text}`} />
                   </div>
                   <span className="text-3xl font-bold text-gray-900">{stat.value}</span>
                 </div>
