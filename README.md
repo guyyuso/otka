@@ -102,7 +102,7 @@ The database schema is automatically applied via Supabase migrations. Ensure you
 2. Navigate to **Authentication > Users**
 3. Click **"Add user"** and enter:
    - **Email**: `admin@example.com`
-   - **Password**: `4010140`
+   - **Password**: Choose a strong password (minimum 8 characters, include uppercase, lowercase, numbers, and symbols)
    - **Email Confirm**: `true`
    - **User Metadata**: `{"full_name": "System Administrator"}`
 4. The system will automatically assign admin role

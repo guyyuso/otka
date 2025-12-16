@@ -11,6 +11,7 @@ interface FileItem {
   type: string;
   url: string;
   uploaded_at: string;
+  storage_path: string;
 }
 
 const DownloadsPage: React.FC = () => {
@@ -113,16 +114,18 @@ const DownloadsPage: React.FC = () => {
     }
 
     try {
-      // Delete from storage
+      // Delete from storage first
       const { error: storageError } = await supabase.storage
         .from('user-files')
         .remove([storagePath]);
 
       if (storageError) {
         console.error('Error deleting from storage:', storageError);
+        alert('Failed to delete file from storage. Please try again.');
+        return;
       }
 
-      // Delete from database
+      // Only delete from database if storage deletion succeeded
       const { error: dbError } = await supabase
         .from('user_files')
         .delete()
