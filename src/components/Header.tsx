@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  Settings, 
+import {
+  Settings,
   LogOut,
   User,
   Menu,
   X,
   Shield,
   Users,
-  LayoutDashboard
+  LayoutDashboard,
+  ShoppingBag
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -31,7 +32,7 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
         <div className="flex items-center">
-          <button 
+          <button
             className="block md:hidden rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none"
             onClick={toggleMenu}
           >
@@ -47,67 +48,71 @@ const Header: React.FC = () => {
         </div>
 
         <nav className="hidden md:flex items-center space-x-1 space-x-reverse">
-          <Link 
-            to="/" 
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              location.pathname === '/' 
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            to="/"
+            className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             Dashboard
           </Link>
+          <Link
+            to="/store"
+            className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${location.pathname === '/store'
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+          >
+            <ShoppingBag size={16} className="mr-1" />
+            Store
+          </Link>
           {isAdmin() && (
             <>
-              <Link 
-                to="/admin" 
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === '/admin' 
-                    ? 'text-blue-600 bg-blue-50' 
+              <Link
+                to="/admin"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/admin'
+                    ? 'text-blue-600 bg-blue-50'
                     : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 Admin
               </Link>
-              <Link 
-                to="/admin/users" 
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === '/admin/users' 
-                    ? 'text-blue-600 bg-blue-50' 
+              <Link
+                to="/admin/users"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/admin/users'
+                    ? 'text-blue-600 bg-blue-50'
                     : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 Users
               </Link>
             </>
           )}
-          <Link 
-            to="/notes" 
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              location.pathname === '/notes' 
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            to="/notes"
+            className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/notes'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             Notes
           </Link>
-          <Link 
-            to="/downloads" 
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              location.pathname === '/downloads' 
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            to="/downloads"
+            className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/downloads'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             Downloads
           </Link>
-          <Link 
-            to="/settings" 
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              location.pathname === '/settings' 
-                ? 'text-blue-600 bg-blue-50' 
+          <Link
+            to="/settings"
+            className={`px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/settings'
+                ? 'text-blue-600 bg-blue-50'
                 : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             Settings
           </Link>
@@ -115,7 +120,7 @@ const Header: React.FC = () => {
 
         <div className="flex items-center space-x-2 space-x-reverse">
           <div className="relative">
-            <button 
+            <button
               className="flex items-center text-sm rounded-full focus:outline-none"
               onClick={toggleMenu}
             >
@@ -134,11 +139,11 @@ const Header: React.FC = () => {
                   <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
                   <p className="text-sm text-gray-500">{user?.email || 'user@example.com'}</p>
                 </div>
-                
+
                 {isAdmin() && (
                   <>
-                    <Link 
-                      to="/admin" 
+                    <Link
+                      to="/admin"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <div className="flex items-center">
@@ -146,8 +151,8 @@ const Header: React.FC = () => {
                         Admin Panel
                       </div>
                     </Link>
-                    <Link 
-                      to="/admin/users" 
+                    <Link
+                      to="/admin/users"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <div className="flex items-center">
@@ -157,9 +162,9 @@ const Header: React.FC = () => {
                     </Link>
                   </>
                 )}
-                
-                <Link 
-                  to="/settings" 
+
+                <Link
+                  to="/settings"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <div className="flex items-center">
@@ -167,9 +172,9 @@ const Header: React.FC = () => {
                     Settings
                   </div>
                 </Link>
-                
-                <Link 
-                  to="/settings/profile" 
+
+                <Link
+                  to="/settings/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <div className="flex items-center">
@@ -177,8 +182,8 @@ const Header: React.FC = () => {
                     Profile
                   </div>
                 </Link>
-                
-                <button 
+
+                <button
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                   onClick={handleLogout}
                 >
@@ -197,67 +202,70 @@ const Header: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 py-2">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link 
-              to="/" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                location.pathname === '/' 
-                  ? 'text-blue-600 bg-blue-50' 
+            <Link
+              to="/"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/'
+                  ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Dashboard
             </Link>
+            <Link
+              to="/store"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/store'
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+            >
+              Store
+            </Link>
             {isAdmin() && (
               <>
-                <Link 
-                  to="/admin" 
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    location.pathname === '/admin' 
-                      ? 'text-blue-600 bg-blue-50' 
+                <Link
+                  to="/admin"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/admin'
+                      ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Admin Panel
                 </Link>
-                <Link 
-                  to="/admin/users" 
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    location.pathname === '/admin/users' 
-                      ? 'text-blue-600 bg-blue-50' 
+                <Link
+                  to="/admin/users"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/admin/users'
+                      ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Users
                 </Link>
               </>
             )}
-            <Link 
-              to="/notes" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                location.pathname === '/notes' 
-                  ? 'text-blue-600 bg-blue-50' 
+            <Link
+              to="/notes"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/notes'
+                  ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Notes
             </Link>
-            <Link 
-              to="/downloads" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                location.pathname === '/downloads' 
-                  ? 'text-blue-600 bg-blue-50' 
+            <Link
+              to="/downloads"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/downloads'
+                  ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Downloads
             </Link>
-            <Link 
-              to="/settings" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                location.pathname === '/settings' 
-                  ? 'text-blue-600 bg-blue-50' 
+            <Link
+              to="/settings"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/settings'
+                  ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Settings
             </Link>

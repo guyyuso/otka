@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, FileText } from 'lucide-react';
 import Header from '../components/Header';
-import { supabase } from '../lib/supabase';
+import { notesApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const NotesPage: React.FC = () => {
@@ -22,7 +22,7 @@ const NotesPage: React.FC = () => {
     if (autoSaveEnabled && notes && user) {
       const timer = setTimeout(() => {
         saveNotes();
-      }, 2000); // Auto-save after 2 seconds of inactivity
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
@@ -32,30 +32,10 @@ const NotesPage: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_notes')
-        .select('id, content, updated_at')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading notes:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        // Get the most recent note
-        const mostRecentNote = data[0];
-        setNotes(mostRecentNote.content || '');
-        setExistingNoteId(mostRecentNote.id);
-        
-        // If there are multiple notes, we should clean up duplicates
-        if (data.length > 1) {
-          console.log('Found multiple notes, keeping the most recent one');
-          // Optionally, you could delete the older notes here
-          // const olderNoteIds = data.slice(1).map(note => note.id);
-          // await supabase.from('user_notes').delete().in('id', olderNoteIds);
-        }
+      const data = await notesApi.get();
+      if (data) {
+        setNotes(data.content || '');
+        setExistingNoteId(data.id);
       } else {
         setNotes('');
         setExistingNoteId(null);
@@ -70,42 +50,10 @@ const NotesPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      if (existingNoteId) {
-        // Update existing note
-        const { error } = await supabase
-          .from('user_notes')
-          .update({
-            content: notes,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingNoteId);
-
-        if (error) {
-          console.error('Error updating notes:', error);
-          return;
-        }
-      } else {
-        // Create new note
-        const { data, error } = await supabase
-          .from('user_notes')
-          .insert({
-            user_id: user.id,
-            content: notes,
-            updated_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-
-        if (error) {
-          console.error('Error creating notes:', error);
-          return;
-        }
-
-        if (data) {
-          setExistingNoteId(data.id);
-        }
+      const data = await notesApi.save(notes, existingNoteId || undefined);
+      if (data && data.id) {
+        setExistingNoteId(data.id);
       }
-
       setLastSaved(new Date());
     } catch (error) {
       console.error('Error saving notes:', error);

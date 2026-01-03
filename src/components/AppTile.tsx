@@ -1,20 +1,22 @@
 import React, { useState, useRef } from 'react';
-import { MoreVertical, Link as LinkIcon, Edit, Key, Trash, ExternalLink, Copy } from 'lucide-react';
+import { MoreVertical, Link as LinkIcon, Edit, Key, Trash, ExternalLink, Copy, Plus, Lock } from 'lucide-react';
 import { AppData } from '../types';
 import { useAppData } from '../contexts/AppDataContext';
 import useClickOutside from '../hooks/useClickOutside';
 
 interface AppTileProps {
   app: AppData;
+  onAddClick?: () => void;
+  onAppLaunch?: (app: AppData) => void;
 }
 
-const AppTile: React.FC<AppTileProps> = ({ app }) => {
+const AppTile: React.FC<AppTileProps> = ({ app, onAddClick, onAppLaunch }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showCredentials, setShowCredentials] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { removeApp, updateLastUsed } = useAppData();
-  
+
   useClickOutside(menuRef, () => {
     if (menuOpen) setMenuOpen(false);
   });
@@ -27,14 +29,20 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
   const handleAppClick = async () => {
     if (!editMode) {
       await updateLastUsed(app.id);
-      
+
+      // If onAppLaunch is provided, use it (allows parent to handle PIN etc)
+      if (onAppLaunch) {
+        onAppLaunch(app);
+        return;
+      }
+
       // Show credentials if available
       if (app.username || app.password) {
         setShowCredentials(true);
         // Auto-hide after 5 seconds
         setTimeout(() => setShowCredentials(false), 5000);
       }
-      
+
       window.open(app.url, '_blank');
     }
   };
@@ -62,10 +70,9 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
   };
 
   return (
-    <div 
-      className={`bg-white rounded-xl shadow-sm overflow-hidden relative transition-all duration-200 cursor-pointer ${
-        editMode ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
-      }`}
+    <div
+      className={`bg-white rounded-xl shadow-sm overflow-hidden relative transition-all duration-200 cursor-pointer ${editMode ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
+        }`}
       onClick={handleAppClick}
     >
       <div className="relative">
@@ -76,9 +83,9 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
           >
             <MoreVertical size={16} />
           </button>
-          
+
           {menuOpen && (
-            <div 
+            <div
               ref={menuRef}
               className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10"
               onClick={e => e.stopPropagation()}
@@ -87,7 +94,7 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
                 <LinkIcon size={16} className="mr-2 text-blue-500" />
                 <span>Change URL</span>
               </button>
-              <button 
+              <button
                 onClick={handleEditClick}
                 className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
@@ -98,7 +105,7 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
                 <Key size={16} className="mr-2 text-orange-500" />
                 <span>Update Password</span>
               </button>
-              <button 
+              <button
                 onClick={handleDeleteClick}
                 className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100"
               >
@@ -108,12 +115,12 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
             </div>
           )}
         </div>
-        
+
         <div className="p-4 flex items-center justify-center h-32">
           {app.logo ? (
-            <img 
-              src={app.logo} 
-              alt={app.name} 
+            <img
+              src={app.logo}
+              alt={app.name}
               className="max-h-16 max-w-32 object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -129,13 +136,27 @@ const AppTile: React.FC<AppTileProps> = ({ app }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="p-3 bg-gray-50 border-t border-gray-100">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium text-gray-900 truncate">{app.name}</h3>
-          {!editMode && (
-            <ExternalLink size={14} className="text-gray-400" />
-          )}
+          <h3 className="font-medium text-gray-900 truncate flex-1">{app.name}</h3>
+          <div className="flex items-center space-x-1">
+            {onAddClick && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddClick();
+                }}
+                className="p-1 rounded-full text-blue-600 hover:bg-blue-100 transition-colors"
+                title="Add new application"
+              >
+                <Plus size={16} />
+              </button>
+            )}
+            {!editMode && (
+              <ExternalLink size={14} className="text-gray-400" />
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,118 +1,155 @@
-# 🔐 SecureApps - Secure Application Access Management
+# 🔐 SecureApps - Enterprise Application Access Portal
 
 <div align="center">
-  <img src="https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="SecureApps Banner" width="100%" height="300" style="object-fit: cover; border-radius: 10px;">
-  
-  <h3>🚀 A modern, secure application access management platform</h3>
-  <p>Centralize your app access, manage passwords securely, and maintain organizational control</p>
+  <h3>🚀 Secure application access management with PIN authentication</h3>
+  <p>Centralize app access, manage users, and control application provisioning with approval workflows</p>
 
-  [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+  [![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-  [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+  [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 </div>
 
 ---
 
 ## ✨ Features
 
-### 🎯 **Core Functionality**
-- **🔐 Secure Authentication** - Role-based access control with user and admin roles
-- **📱 Application Management** - Add, organize, and access applications with one click
-- **🔑 Password Management** - Securely store and manage application credentials
-- **⚡ Quick Access** - Recent applications and organized categories for fast navigation
+### 🎯 Core Functionality
+- **🔐 PIN Authentication** - 4-digit PIN gate for app access with rate limiting
+- **📱 Application Dashboard** - Personal app tiles with quick launch
+- **🏪 App Store** - Browse and request access to applications
+- **👥 User Management** - Full user CRUD with role-based access
 
-### 👨‍💼 **Admin Features**
-- **📊 Admin Dashboard** - Comprehensive system overview and statistics
-- **👥 User Management** - Create, edit, suspend, and manage user accounts
-- **📈 Analytics** - Track user activity and system usage
-- **🛠️ System Configuration** - Configure system settings and preferences
+### 👨‍💼 Admin Features
+- **📊 Admin Dashboard** - System statistics and overview
+- **🔑 Manage Access** - Search users and assign apps with autocomplete
+- **📋 Request Queue** - Approve/deny app access requests
+- **📈 User Activity** - Live analytics and user tracking
+- **🛡️ Audit Logs** - Complete action history
 
-### 📝 **Productivity Tools**
-- **📄 Personal Notes** - Built-in note-taking with auto-save functionality
-- **📁 File Management** - Upload, organize, and share files securely
-- **🔄 Activity Tracking** - Monitor application usage and access patterns
-- **⚙️ Settings Management** - Customize security preferences and notifications
-
-### 🎨 **User Experience**
-- **📱 Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-- **🌙 Modern UI** - Clean, intuitive interface with smooth animations
-- **🔍 Smart Search** - Quickly find applications and files
-- **🎨 Customizable** - Personalize your dashboard and preferences
+### 🔒 Security
+- **JWT Authentication** with server-side session validation
+- **bcrypt Password Hashing** (cost factor 10)
+- **RBAC** - 15+ granular permissions
+- **Rate Limiting** - PIN attempts: 5 per 5 minutes
+- **Security Headers** - HSTS, X-Frame-Options, X-XSS-Protection
 
 ---
 
 ## 🛠️ Technology Stack
 
-### Frontend
-- **React 18** - Modern React with hooks and context
-- **TypeScript** - Type-safe development
-- **Vite** - Lightning-fast build tool
-- **Tailwind CSS** - Utility-first CSS framework
-- **Lucide React** - Beautiful, customizable icons
-- **React Router** - Client-side routing
-
-### Backend & Infrastructure
-- **Supabase** - Backend-as-a-Service platform
-  - PostgreSQL database with Row Level Security
-  - Real-time authentication
-  - File storage with CDN
-  - Edge functions for serverless computing
-
-### Development Tools
-- **ESLint** - Code linting and formatting
-- **PostCSS** - CSS processing
-- **TypeScript** - Static type checking
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons |
+| **Backend** | Node.js 18+, Express.js 4.x |
+| **Database** | PostgreSQL 14+ |
+| **Authentication** | JWT (jsonwebtoken) + bcrypt |
+| **Logging** | Winston |
+| **Deployment** | Docker, Docker Compose, Nginx |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- A Supabase account and project
+- Node.js 18+
+- PostgreSQL 14+
+- npm or yarn
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/secureapps.git
-cd secureapps
-```
+### 1. Clone & Install
 
-### 2. Install Dependencies
 ```bash
+git clone https://github.com/guyyuso/otka.git
+cd otka
+
+# Frontend
+npm install
+
+# Backend
+cd server
 npm install
 ```
 
-### 3. Environment Setup
-Create a `.env` file in the root directory:
+### 2. Configure Environment
+
+**Frontend** (`.env`):
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=http://localhost:3001/api
 ```
 
-### 4. Database Setup
-The database schema is automatically applied via Supabase migrations. Ensure your Supabase project is connected and run:
-```bash
-# Migrations are automatically applied when you connect to Supabase
+**Backend** (`server/.env`):
+```env
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=secureapps
+DB_USER=postgres
+DB_PASSWORD=your_password
+JWT_SECRET=your-super-secret-key-min-32-chars
 ```
 
-### 5. Create Admin User
-1. Go to your Supabase Dashboard
-2. Navigate to **Authentication > Users**
-3. Click **"Add user"** and enter:
-   - **Email**: `admin@example.com`
-   - **Password**: Choose a strong password (minimum 8 characters, include uppercase, lowercase, numbers, and symbols)
-   - **Email Confirm**: `true`
-   - **User Metadata**: `{"full_name": "System Administrator"}`
-4. The system will automatically assign admin role
+### 3. Setup Database
 
-### 6. Start Development Server
 ```bash
+# Create PostgreSQL database
+createdb secureapps
+
+# Tables are auto-created on first server start
+```
+
+### 4. Run Development
+
+```bash
+# Terminal 1 - Backend
+cd server
+npm start
+
+# Terminal 2 - Frontend
 npm run dev
 ```
 
-Visit `http://localhost:5173` to access the application.
+Visit `http://localhost:5173`
+
+### 5. Create Admin User
+
+Register a new user, then update their role in the database:
+```sql
+UPDATE users SET role = 'super_admin' WHERE email = 'your@email.com';
+```
+
+---
+
+## 🐳 Docker Deployment
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- Frontend on port 80
+- Backend on port 3001
+- PostgreSQL on port 5432
+
+---
+
+## 👥 User Roles & Permissions
+
+| Role | Permissions |
+|------|-------------|
+| **Super Admin** | Full system access, system settings, audit logs, all admin features |
+| **Admin** | User management, app catalog, app assignments, request approvals |
+| **User** | Personal dashboard, app store, request access, settings |
+
+### Permission Slugs
+
+| Category | Permissions |
+|----------|-------------|
+| **Users** | `users.view`, `users.create`, `users.edit`, `users.delete` |
+| **Apps** | `apps.view`, `apps.create`, `apps.edit`, `apps.delete`, `apps.assign` |
+| **Logs** | `logs.view` |
+| **Settings** | `settings.view`, `settings.edit` |
 
 ---
 
@@ -120,237 +157,140 @@ Visit `http://localhost:5173` to access the application.
 
 ### Core Tables
 
-#### `user_profiles`
-- User profile information and role management
-- Supports `admin` and `user` roles
-- Tracks user status and creation dates
+| Table | Description |
+|-------|-------------|
+| `users` | User accounts with roles and status |
+| `sessions` | JWT session tracking |
+| `roles` | Role definitions (user, admin, super_admin) |
+| `permissions` | Permission slugs |
+| `role_permissions` | Role-permission mappings |
+| `applications` | Personal user applications |
+| `application_tiles` | Admin-managed app catalog |
+| `user_app_assignments` | App assignments with PIN hash |
+| `app_requests` | Store access requests |
+| `pin_attempts` | Rate limiting for PIN verification |
+| `audit_logs` | Action history |
+| `system_settings` | System configuration |
 
-#### `applications`
-- Application metadata and credentials
-- Encrypted password storage
-- Category organization and usage tracking
+### Key Relationships
 
-#### `user_notes`
-- Personal note-taking with auto-save
-- Real-time updates and version control
-
-#### `user_files`
-- File upload and management
-- Secure storage with access controls
-- Metadata tracking and organization
-
-### Security Features
-- **Row Level Security (RLS)** - Data isolation between users
-- **Encrypted Storage** - Sensitive data protection
-- **Role-based Access** - Admin and user permission levels
-- **Audit Trails** - Activity logging and monitoring
-
----
-
-## 👥 User Roles & Permissions
-
-### 🧑‍💼 Admin Users
-- **Full System Access** - Manage all users and applications
-- **User Management** - Create, edit, suspend, and delete users
-- **System Analytics** - View usage statistics and reports
-- **Configuration** - Modify system settings and preferences
-
-### 👤 Regular Users
-- **Personal Dashboard** - Manage their own applications
-- **Credential Storage** - Secure password management
-- **File Management** - Upload and organize personal files
-- **Note Taking** - Personal notes with auto-save
-
----
-
-## 🎨 Screenshots
-
-<div align="center">
-  <img src="https://images.pexels.com/photos/159844/cellular-education-classroom-school-159844.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Dashboard Screenshot" width="45%" style="border-radius: 8px; margin: 10px;">
-  <img src="https://images.pexels.com/photos/265667/pexels-photo-265667.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Admin Panel Screenshot" width="45%" style="border-radius: 8px; margin: 10px;">
-</div>
-
----
-
-## 🔧 Development
-
-### Available Scripts
-```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run linting
-npm run lint
-
-# Preview production build
-npm run preview
 ```
-
-### Project Structure
+users ──< sessions
+users ──< applications (personal apps)
+users ──< user_app_assignments >── application_tiles
+users ──< app_requests >── application_tiles
+users ──< pin_attempts
+users ──< audit_logs
+roles ──< role_permissions >── permissions
 ```
-src/
-├── components/          # Reusable UI components
-├── contexts/           # React context providers
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-├── lib/                # Utility libraries
-├── types.ts            # TypeScript type definitions
-└── main.tsx           # Application entry point
-```
-
-### Code Style
-- **TypeScript** for type safety
-- **ESLint** for code quality
-- **Tailwind CSS** for styling
-- **React Hooks** for state management
-- **Context API** for global state
-
----
-
-## 🔐 Security Features
-
-### Authentication & Authorization
-- **JWT-based Authentication** via Supabase Auth
-- **Role-based Access Control** (RBAC)
-- **Session Management** with automatic token refresh
-- **Multi-factor Authentication** support (configurable)
-
-### Data Protection
-- **Row Level Security** (RLS) in PostgreSQL
-- **Encrypted Password Storage** for application credentials
-- **Secure File Storage** with access controls
-- **HTTPS Enforcement** for all communications
-
-### Privacy & Compliance
-- **Data Isolation** - Users can only access their own data
-- **Audit Logging** - Track all user activities
-- **GDPR Compliance** - User data control and deletion
-- **Regular Security Updates** - Keep dependencies current
-
----
-
-## 🚀 Deployment
-
-### Recommended Hosting
-- **Frontend**: Netlify, Vercel, or Cloudflare Pages
-- **Backend**: Supabase (managed PostgreSQL + Edge Functions)
-- **Storage**: Supabase Storage (S3-compatible)
-
-### Production Build
-```bash
-npm run build
-```
-
-### Environment Variables (Production)
-```env
-VITE_SUPABASE_URL=your_production_supabase_url
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Getting Started
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Code of Conduct
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ---
 
 ## 📚 Documentation
 
-- **[API Documentation](docs/api.md)** - Backend API reference
-- **[User Guide](docs/user-guide.md)** - End-user documentation
-- **[Admin Guide](docs/admin-guide.md)** - Administrator documentation
-- **[Developer Guide](docs/developer-guide.md)** - Development setup and guidelines
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/login` | User authentication |
+| `POST` | `/api/auth/register` | User registration |
+| `GET` | `/api/auth/me` | Get current user |
+| `GET` | `/api/users/search` | User autocomplete search |
+| `GET` | `/api/admin/apps` | List app catalog |
+| `POST` | `/api/admin/assignments/users/:id` | Assign app with PIN |
+| `POST` | `/api/dashboard/apps/:id/verify-pin` | PIN verification |
+| `GET` | `/api/store` | Browse app store |
+| `POST` | `/api/store/:id/request` | Request app access |
+| `GET` | `/api/admin/requests` | List access requests |
+| `POST` | `/api/admin/requests/:id/approve` | Approve request |
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `JWT_SECRET` | Secret key for JWT signing | ✅ Yes |
+| `DB_HOST` | PostgreSQL host | ✅ Yes |
+| `DB_NAME` | Database name | ✅ Yes |
+| `DB_USER` | Database user | ✅ Yes |
+| `DB_PASSWORD` | Database password | ✅ Yes |
+| `FRONTEND_URL` | CORS allowed origin | ✅ Yes |
+| `NODE_ENV` | Environment (production/development) | No |
 
 ---
 
 ## 🎯 Roadmap
 
-### 🔄 Current (v1.0)
-- ✅ Core application management
-- ✅ User authentication and roles
-- ✅ Admin dashboard
-- ✅ Notes and file management
+### ✅ Completed (v1.0)
+- [x] User authentication & authorization
+- [x] Role-based access control (RBAC)
+- [x] Application dashboard
+- [x] App Store with request workflow
+- [x] PIN authentication system
+- [x] Admin user management
+- [x] Audit logging
+- [x] Docker deployment
 
-### 🚀 Next Release (v1.1)
-- 🔲 Multi-factor authentication
-- 🔲 Advanced search and filtering
-- 🔲 API integrations
-- 🔲 Mobile app (React Native)
+### 🔄 In Progress (v1.1)
+- [ ] Username autocomplete for all forms
+- [ ] Email notifications for approvals
+- [ ] Bulk user import
 
-### 🌟 Future (v2.0)
-- 🔲 SSO integration (SAML, OIDC)
-- 🔲 Advanced analytics and reporting
-- 🔲 Team collaboration features
-- 🔲 Enterprise compliance tools
+### 🚀 Planned (v2.0)
+- [ ] SSO integration (SAML, OIDC)
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Multi-factor authentication (MFA)
+- [ ] API rate limiting
+- [ ] Webhooks for integrations
 
 ---
 
-## 📋 FAQ
+## 📁 Project Structure
 
-<details>
-<summary><strong>How do I reset a user's password?</strong></summary>
+```
+otka/
+├── src/                    # React frontend
+│   ├── components/         # Reusable UI components
+│   ├── pages/              # Page components
+│   │   └── admin/          # Admin pages
+│   ├── contexts/           # React contexts (Auth, AppData)
+│   ├── hooks/              # Custom hooks
+│   ├── lib/                # API client
+│   └── types.ts            # TypeScript types
+├── server/                 # Express backend
+│   ├── routes/             # API routes (12 files)
+│   ├── middleware/         # Auth & RBAC middleware
+│   ├── utils/              # Utilities
+│   ├── db.js               # Database connection & schema
+│   └── logger.js           # Winston logger
+├── deploy/                 # Deployment configs
+└── docker-compose.yml      # Docker setup
+```
 
-As an admin, you can reset user passwords through the Supabase dashboard:
-1. Go to Authentication > Users
-2. Select the user
-3. Click "Send password reset email"
-</details>
+---
 
-<details>
-<summary><strong>Can I customize the application categories?</strong></summary>
+## � Acknowledgments
 
-Yes! Categories can be customized in the application management interface. Default categories include General, Productivity, Communication, Development, Design, Finance, HR, and Marketing.
-</details>
-
-<details>
-<summary><strong>Is there a mobile app?</strong></summary>
-
-Currently, SecureApps is a responsive web application that works great on mobile browsers. A native mobile app is planned for v1.1.
-</details>
-
-<details>
-<summary><strong>How secure is password storage?</strong></summary>
-
-All passwords are encrypted at rest using industry-standard encryption. The application uses Supabase's secure infrastructure with PostgreSQL's built-in security features.
-</details>
+- [React](https://reactjs.org/) - UI library
+- [Vite](https://vitejs.dev/) - Build tool
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Lucide](https://lucide.dev/) - Icon library
+- [Express.js](https://expressjs.com/) - Web framework
+- [PostgreSQL](https://www.postgresql.org/) - Database
+- [Docker](https://www.docker.com/) - Containerization
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **[Supabase](https://supabase.com/)** - Amazing backend platform
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[Lucide](https://lucide.dev/)** - Beautiful icon library
-- **[React](https://reactjs.org/)** - UI library
-- **[Vite](https://vitejs.dev/)** - Build tool
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
-  <p>Made with ❤️ by the SecureApps Team</p>
+  <p>Made with ❤️ by <a href="https://github.com/guyyuso">guyyuso</a></p>
   <p>
-    <a href="https://github.com/yourusername/secureapps/issues">Report Bug</a> •
-    <a href="https://github.com/yourusername/secureapps/issues">Request Feature</a> •
-    <a href="mailto:support@secureapps.example.com">Contact Support</a>
+    <a href="https://github.com/guyyuso/otka/issues">Report Bug</a> •
+    <a href="https://github.com/guyyuso/otka/issues">Request Feature</a>
   </p>
 </div>

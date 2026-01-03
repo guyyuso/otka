@@ -3,12 +3,17 @@ import { Plus } from 'lucide-react';
 import Header from '../components/Header';
 import AppSection from '../components/AppSection';
 import AddAppModal from '../components/AddAppModal';
+import PinModal from '../components/PinModal';
 import { useAppData } from '../contexts/AppDataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { dashboardApi } from '../lib/api';
+import { AppData } from '../types';
 
 const DashboardPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { recentlyUsed, mainApps, loading } = useAppData();
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pendingApp, setPendingApp] = useState<AppData | null>(null);
+  const { recentlyUsed, mainApps, assignedApps, loading } = useAppData();
   const { loading: authLoading } = useAuth();
 
   // Show loading only if auth is still loading
@@ -23,7 +28,40 @@ const DashboardPage: React.FC = () => {
     );
   }
 
-  const hasApps = recentlyUsed.length > 0 || mainApps.length > 0;
+  const handleAppLaunch = async (app: AppData) => {
+    // If assigned app requires PIN, show PIN modal
+    if (app.isAssigned && app.requiresPin && app.appTileId) {
+      setPendingApp(app);
+      setPinModalOpen(true);
+      return;
+    }
+    // Otherwise launch directly
+    window.open(app.url, '_blank');
+  };
+
+  const handlePinVerify = async (pin: string): Promise<{ verified: boolean; error?: string; remainingAttempts?: number }> => {
+    if (!pendingApp?.appTileId) {
+      return { verified: false, error: 'Invalid app' };
+    }
+
+    try {
+      const result = await dashboardApi.verifyPin(pendingApp.appTileId, pin);
+      if (result.verified) {
+        setPinModalOpen(false);
+        window.open(pendingApp.url, '_blank');
+        setPendingApp(null);
+      }
+      return result;
+    } catch (err: any) {
+      return {
+        verified: false,
+        error: err.message || 'Verification failed',
+        remainingAttempts: err.remainingAttempts
+      };
+    }
+  };
+
+  const hasApps = recentlyUsed.length > 0 || mainApps.length > 0 || assignedApps.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -65,27 +103,30 @@ const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {recentlyUsed.length > 0 && (
-              <AppSection 
-                title="Recent Applications" 
-                icon="clock" 
-                apps={recentlyUsed} 
-              />
-            )}
-            
-            {mainApps.length > 0 && (
-              <AppSection 
-                title="All Applications" 
-                icon="grid" 
-                apps={mainApps} 
-              />
-            )}
+            {/* Unified Apps Grid */}
+            <AppSection
+              title="My Applications"
+              icon="grid"
+              apps={[...assignedApps, ...recentlyUsed, ...mainApps]}
+              onAddClick={() => setIsAddModalOpen(true)}
+              onAppLaunch={handleAppLaunch}
+            />
           </div>
         )}
 
-        <AddAppModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)} 
+        <AddAppModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+
+        <PinModal
+          isOpen={pinModalOpen}
+          onClose={() => {
+            setPinModalOpen(false);
+            setPendingApp(null);
+          }}
+          onVerify={handlePinVerify}
+          appName={pendingApp?.name || ''}
         />
       </main>
     </div>

@@ -48,13 +48,13 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       await addApp(formData);
       setFormData({
@@ -65,9 +65,11 @@ const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => {
         password: '',
         category: 'general'
       });
+      alert('Application added successfully!');
       onClose();
-    } catch (err) {
-      setError('Error adding application');
+    } catch (err: any) {
+      console.error('Add app error:', err);
+      setError(err?.message || 'Failed to add application. Please try again.');
     } finally {
       setIsLoading(false);
     }

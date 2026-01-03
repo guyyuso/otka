@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { applicationsApi } from '../lib/api';
 import { useAuth } from './AuthContext';
 import { AppData } from '../types';
 
 interface AppDataContextType {
   recentlyUsed: AppData[];
   mainApps: AppData[];
+  assignedApps: AppData[];
   loading: boolean;
   addApp: (app: Omit<AppData, 'id' | 'lastUsed'>) => Promise<void>;
   removeApp: (appId: string) => Promise<void>;
@@ -19,15 +20,14 @@ const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [recentlyUsed, setRecentlyUsed] = useState<AppData[]>([]);
   const [mainApps, setMainApps] = useState<AppData[]>([]);
+  const [assignedApps, setAssignedApps] = useState<AppData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    // Only fetch apps when auth is complete and user is authenticated
     if (!authLoading && isAuthenticated && user) {
       fetchApps();
     } else if (!authLoading && !isAuthenticated) {
-      // Clear data when not authenticated
       setRecentlyUsed([]);
       setMainApps([]);
       setLoading(false);
@@ -42,26 +42,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       setLoading(true);
-      
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Apps fetch timeout')), 10000)
-      );
 
-      const appsPromise = supabase
-        .from('applications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      const { data, error } = await Promise.race([appsPromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error('Error fetching apps:', error);
-        setRecentlyUsed([]);
-        setMainApps([]);
-        return;
-      }
+      const [data, assignedData] = await Promise.all([
+        applicationsApi.getAll(),
+        (applicationsApi as any).getAssigned().catch(() => []) // Handle potential failures gracefully
+      ]);
 
       const apps: AppData[] = (data || []).map((app: any) => ({
         id: app.id,
@@ -71,29 +56,46 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         username: app.username || '',
         password: app.password || '',
         lastUsed: app.last_used || undefined,
-        category: app.category
+        category: app.category,
+        isPersonal: true
+      }));
+
+      const assigned: AppData[] = (assignedData || []).map((app: any) => ({
+        id: `assigned-${app.id}`, // specific ID to avoid collision
+        appTileId: app.app_tile_id || app.id, // actual app tile ID for PIN verification
+        name: app.name,
+        logo: app.logo_url || '',
+        url: app.url || app.launch_url,
+        username: app.app_username || '',
+        password: '', // No password, use PIN instead
+        category: app.category,
+        authType: app.auth_type,
+        isAssigned: true,
+        requiresPin: app.requires_pin ?? true // Default to requiring PIN
       }));
 
       // Split into recently used (last 7 days) and main apps
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const recent = apps.filter(app => 
+      const recent = apps.filter(app =>
         app.lastUsed && new Date(app.lastUsed) > sevenDaysAgo
-      ).sort((a, b) => 
+      ).sort((a, b) =>
         new Date(b.lastUsed!).getTime() - new Date(a.lastUsed!).getTime()
       );
 
-      const main = apps.filter(app => 
+      const main = apps.filter(app =>
         !app.lastUsed || new Date(app.lastUsed) <= sevenDaysAgo
       );
 
       setRecentlyUsed(recent);
       setMainApps(main);
+      setAssignedApps(assigned);
     } catch (error) {
       console.error('Error fetching apps:', error);
       setRecentlyUsed([]);
       setMainApps([]);
+      setAssignedApps([]);
     } finally {
       setLoading(false);
     }
@@ -105,22 +107,14 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
-      const { error } = await supabase
-        .from('applications')
-        .insert({
-          user_id: user.id,
-          name: app.name,
-          url: app.url,
-          logo_url: app.logo || null,
-          username: app.username || null,
-          password: app.password || null,
-          category: app.category || 'general'
-        });
-
-      if (error) {
-        console.error('Error adding app:', error);
-        throw new Error('Failed to add application');
-      }
+      await applicationsApi.create({
+        name: app.name,
+        url: app.url,
+        logoUrl: app.logo || undefined,
+        username: app.username || undefined,
+        password: app.password || undefined,
+        category: app.category || 'General'
+      });
 
       await fetchApps();
     } catch (error) {
@@ -135,17 +129,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
-      const { error } = await supabase
-        .from('applications')
-        .delete()
-        .eq('id', appId)
-        .eq('user_id', user.id); // Ensure user can only delete their own apps
-
-      if (error) {
-        console.error('Error removing app:', error);
-        throw new Error('Failed to remove application');
-      }
-
+      await applicationsApi.delete(appId);
       await fetchApps();
     } catch (error) {
       console.error('Error removing app:', error);
@@ -162,22 +146,12 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const updateData: any = {};
       if (data.name !== undefined) updateData.name = data.name;
       if (data.url !== undefined) updateData.url = data.url;
-      if (data.logo !== undefined) updateData.logo_url = data.logo;
+      if (data.logo !== undefined) updateData.logoUrl = data.logo;
       if (data.username !== undefined) updateData.username = data.username;
       if (data.password !== undefined) updateData.password = data.password;
       if (data.category !== undefined) updateData.category = data.category;
 
-      const { error } = await supabase
-        .from('applications')
-        .update(updateData)
-        .eq('id', appId)
-        .eq('user_id', user.id); // Ensure user can only update their own apps
-
-      if (error) {
-        console.error('Error updating app:', error);
-        throw new Error('Failed to update application');
-      }
-
+      await applicationsApi.update(appId, updateData);
       await fetchApps();
     } catch (error) {
       console.error('Error updating app:', error);
@@ -187,26 +161,16 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateLastUsed = async (appId: string): Promise<void> => {
     if (!user || !isAuthenticated) {
-      return; // Silently fail if not authenticated
+      return;
     }
 
     try {
-      const { error } = await supabase
-        .from('applications')
-        .update({ last_used: new Date().toISOString() })
-        .eq('id', appId)
-        .eq('user_id', user.id); // Ensure user can only update their own apps
+      await applicationsApi.access(appId);
 
-      if (error) {
-        console.error('Error updating last used:', error);
-        return;
-      }
-
-      // Don't refresh all apps for this operation to avoid unnecessary loading
-      // Just update the local state
-      const updateAppInList = (apps: AppData[]) => 
-        apps.map(app => 
-          app.id === appId 
+      // Update local state
+      const updateAppInList = (apps: AppData[]) =>
+        apps.map(app =>
+          app.id === appId
             ? { ...app, lastUsed: new Date().toISOString() }
             : app
         );
@@ -223,12 +187,13 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <AppDataContext.Provider value={{ 
-      recentlyUsed, 
-      mainApps, 
+    <AppDataContext.Provider value={{
+      recentlyUsed,
+      mainApps,
+      assignedApps,
       loading,
-      addApp, 
-      removeApp, 
+      addApp,
+      removeApp,
       updateApp,
       updateLastUsed,
       refreshApps
