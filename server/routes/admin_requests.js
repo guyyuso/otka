@@ -40,7 +40,7 @@ router.get('/', requirePermission('app_requests.read'), async (req, res) => {
         }
 
         query += ` ORDER BY 
-            CASE ar.status WHEN 'PENDING' THEN 0 ELSE 1 END,
+            CASE ar.status WHEN 'submitted' THEN 0 WHEN 'in_review' THEN 1 ELSE 2 END,
             ar.created_at DESC
             LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
@@ -140,8 +140,8 @@ router.post('/:id/approve', requirePermission('app_requests.approve'), async (re
 
         const request = requestResult.rows[0];
 
-        if (request.status !== 'PENDING') {
-            return res.status(400).json({ error: 'Request is not pending' });
+        if (request.status !== 'submitted' && request.status !== 'in_review') {
+            return res.status(400).json({ error: 'Request is not in a reviewable state' });
         }
 
         // Start transaction
@@ -149,25 +149,70 @@ router.post('/:id/approve', requirePermission('app_requests.approve'), async (re
         try {
             await client.query('BEGIN');
 
-            // Update request status
+            // Update request status to approved first
             await client.query(`
                 UPDATE app_requests
-                SET status = 'APPROVED', reviewed_by = $1, reviewed_at = NOW(), admin_note = $2, updated_at = NOW()
+                SET status = 'approved', reviewed_by = $1, reviewed_at = NOW(), admin_note = $2, updated_at = NOW()
                 WHERE id = $3
             `, [adminId, note || null, id]);
 
             // Add to history
             await client.query(`
                 INSERT INTO app_request_history (request_id, status, changed_by, note)
-                VALUES ($1, 'APPROVED', $2, $3)
+                VALUES ($1, 'approved', $2, $3)
             `, [id, adminId, note || 'Request approved']);
 
-            // Assign the app to user
-            await client.query(`
-                INSERT INTO user_app_assignments (user_id, app_tile_id, assigned_by)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (user_id, app_tile_id) DO NOTHING
-            `, [request.user_id, request.app_id, adminId]);
+            // If app doesn't exist in store (missing app request), add it first
+            if (!request.app_exists_in_store && request.app_identifier_or_name) {
+                // Check if app was added to catalog during sync
+                const catalogApp = await client.query(`
+                    SELECT id FROM application_tiles
+                    WHERE (name ILIKE $1 OR app_identifier = $1)
+                    AND is_available_in_store = true
+                    LIMIT 1
+                `, [request.app_identifier_or_name]);
+
+                if (catalogApp.rows.length > 0) {
+                    // Update request with app_id
+                    await client.query(`
+                        UPDATE app_requests
+                        SET app_id = $1, app_exists_in_store = true
+                        WHERE id = $2
+                    `, [catalogApp.rows[0].id, id]);
+                    request.app_id = catalogApp.rows[0].id;
+                } else {
+                    // Create app tile from request (simplified - in production would fetch from master catalog)
+                    const newAppResult = await client.query(`
+                        INSERT INTO application_tiles (
+                            name, app_identifier, description, 
+                            is_available_in_store, status, created_by
+                        )
+                        VALUES ($1, $2, $3, true, 'active', $4)
+                        RETURNING id
+                    `, [
+                        request.app_identifier_or_name,
+                        request.app_identifier_or_name.toLowerCase().replace(/\s+/g, '-'),
+                        `Added via request from ${request.user_id}`,
+                        adminId
+                    ]);
+                    
+                    await client.query(`
+                        UPDATE app_requests
+                        SET app_id = $1, app_exists_in_store = true
+                        WHERE id = $2
+                    `, [newAppResult.rows[0].id, id]);
+                    request.app_id = newAppResult.rows[0].id;
+                }
+            }
+
+            // Assign the app to user if app_id exists
+            if (request.app_id) {
+                await client.query(`
+                    INSERT INTO user_app_assignments (user_id, app_tile_id, assigned_by)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (user_id, app_tile_id) DO NOTHING
+                `, [request.user_id, request.app_id, adminId]);
+            }
 
             // Audit log
             await client.query(`
@@ -175,9 +220,27 @@ router.post('/:id/approve', requirePermission('app_requests.approve'), async (re
                 VALUES ($1, 'request.approved', $2, $3, $4)
             `, [adminId, id, JSON.stringify({ user_id: request.user_id, app_id: request.app_id }), req.ip]);
 
+            // Mark request as implemented if app is now in store
+            if (request.app_id) {
+                await client.query(`
+                    UPDATE app_requests
+                    SET status = 'implemented', updated_at = NOW()
+                    WHERE id = $1
+                `, [id]);
+
+                await client.query(`
+                    INSERT INTO app_request_history (request_id, status, changed_by, note)
+                    VALUES ($1, 'implemented', $2, 'App added to store and assigned')
+                `, [id, adminId]);
+            }
+
             await client.query('COMMIT');
 
-            res.json({ message: 'Request approved successfully' });
+            res.json({ 
+                message: 'Request approved successfully',
+                app_added: !!request.app_id,
+                status: request.app_id ? 'implemented' : 'approved'
+            });
 
         } catch (error) {
             await client.query('ROLLBACK');
@@ -226,20 +289,20 @@ router.post('/:id/deny', requirePermission('app_requests.deny'), async (req, res
         // Update request
         await pool.query(`
             UPDATE app_requests
-            SET status = 'DENIED', reviewed_by = $1, reviewed_at = NOW(), deny_reason = $2, updated_at = NOW()
+            SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW(), deny_reason = $2, updated_at = NOW()
             WHERE id = $3
         `, [adminId, reason.trim(), id]);
 
         // Add to history
         await pool.query(`
             INSERT INTO app_request_history (request_id, status, changed_by, note)
-            VALUES ($1, 'DENIED', $2, $3)
+            VALUES ($1, 'rejected', $2, $3)
         `, [id, adminId, reason.trim()]);
 
         // Audit log
         await pool.query(`
             INSERT INTO audit_logs (actor_id, action, target_id, details, ip_address)
-            VALUES ($1, 'request.denied', $2, $3, $4)
+            VALUES ($1, 'request.rejected', $2, $3, $4)
         `, [adminId, id, JSON.stringify({ user_id: request.user_id, app_id: request.app_id, reason: reason.trim() }), req.ip]);
 
         res.json({ message: 'Request denied' });

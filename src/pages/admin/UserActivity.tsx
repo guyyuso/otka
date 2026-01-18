@@ -24,9 +24,9 @@ const UserActivity: React.FC = () => {
     useEffect(() => {
         fetchData();
 
-        let interval: any;
+        let interval: ReturnType<typeof setInterval> | undefined;
         if (autoRefresh) {
-            interval = setInterval(fetchData, 5000); // 5 second polling
+            interval = setInterval(fetchData, 5000);
         }
 
         return () => {
@@ -36,15 +36,15 @@ const UserActivity: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const data = await (adminApi as any).getAnalyticsLiveUsers?.()
+            const data = await (adminApi as { getAnalyticsLiveUsers?: () => Promise<{ liveUsers: LiveUser[]; counts: { LIVE: number; AWAY: number; total: number } }> }).getAnalyticsLiveUsers?.()
                 || await fetch('/api/admin/analytics/user-activity/live', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
                 }).then(r => r.json());
 
             setLiveUsers(data.liveUsers || []);
             setCounts(data.counts || { LIVE: 0, AWAY: 0, total: 0 });
-        } catch (error) {
-            console.error('Error fetching live users:', error);
+        } catch {
+            // Silent error
         } finally {
             setLoading(false);
         }
@@ -95,8 +95,8 @@ const UserActivity: React.FC = () => {
                         <button
                             onClick={() => setAutoRefresh(!autoRefresh)}
                             className={`px-4 py-2 rounded-lg flex items-center text-sm font-medium transition-colors ${autoRefresh
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                                 }`}
                         >
                             <Activity className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-pulse' : ''}`} />

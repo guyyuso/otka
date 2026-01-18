@@ -52,11 +52,12 @@ const DashboardPage: React.FC = () => {
         setPendingApp(null);
       }
       return result;
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { message?: string; remainingAttempts?: number };
       return {
         verified: false,
-        error: err.message || 'Verification failed',
-        remainingAttempts: err.remainingAttempts
+        error: error.message || 'Verification failed',
+        remainingAttempts: error.remainingAttempts
       };
     }
   };

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ExternalLink, Shield, Globe, Users, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit2, Trash2, ExternalLink, Shield, Globe, Users, X, RefreshCw } from 'lucide-react';
 import Header from '../../components/Header';
-import { adminApi, usersApi } from '../../lib/api';
+import { adminApi, usersApi, storeSyncApi } from '../../lib/api';
+import UserSearchAutocomplete from '../../components/UserSearchAutocomplete';
 
 interface AppTile {
     id: string;
@@ -11,7 +12,7 @@ interface AppTile {
     logo_url: string;
     launch_url: string;
     auth_type: string;
-    config: any;
+    config: Record<string, unknown>;
 }
 
 const AppsCatalog: React.FC = () => {
@@ -28,18 +29,48 @@ const AppsCatalog: React.FC = () => {
     });
     const [managingApp, setManagingApp] = useState<AppTile | null>(null);
     const [showUsersModal, setShowUsersModal] = useState(false);
+    const [syncing, setSyncing] = useState(false);
+    const [syncStatus, setSyncStatus] = useState<{ catalog_apps: number; store_apps: number; unsynced: number } | null>(null);
 
     useEffect(() => {
         fetchApps();
+        fetchSyncStatus();
     }, []);
+
+    const fetchSyncStatus = async () => {
+        try {
+            const status = await storeSyncApi.getStatus();
+            setSyncStatus(status);
+        } catch (error) {
+            console.error('Error fetching sync status:', error);
+        }
+    };
+
+    const handleSync = async () => {
+        if (!window.confirm('This will make all active catalog apps available in the store. Continue?')) {
+            return;
+        }
+
+        setSyncing(true);
+        try {
+            const result = await storeSyncApi.sync();
+            alert(`Successfully synced ${result.apps_synced} apps to the store!`);
+            fetchSyncStatus();
+        } catch (error) {
+            alert('Failed to sync store. Please try again.');
+            console.error('Sync error:', error);
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     const fetchApps = async () => {
         try {
             setLoading(true);
             const data = await adminApi.getAppTiles();
             setApps(data);
-        } catch (error) {
-            console.error('Error fetching apps:', error);
+        } catch {
+            // Silent error - apps list will be empty
         } finally {
             setLoading(false);
         }
@@ -57,8 +88,7 @@ const AppsCatalog: React.FC = () => {
             }
             fetchApps();
             closeModal();
-        } catch (error) {
-            console.error('Error saving app:', error);
+        } catch {
             alert('Failed to save app. Check config JSON validity.');
         }
     };
@@ -68,8 +98,8 @@ const AppsCatalog: React.FC = () => {
         try {
             await adminApi.deleteAppTile(id);
             fetchApps();
-        } catch (error) {
-            console.error('Error deleting app:', error);
+        } catch {
+            // Silent error
         }
     };
 
@@ -122,14 +152,33 @@ const AppsCatalog: React.FC = () => {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Application Catalog</h1>
                         <p className="text-gray-600">Manage global application tiles available for assignment</p>
+                        {syncStatus && (
+                            <p className="text-sm text-gray-500 mt-1">
+                                {syncStatus.catalog_apps} apps in catalog • {syncStatus.store_apps} in store
+                                {syncStatus.unsynced > 0 && (
+                                    <span className="text-orange-600 ml-2">({syncStatus.unsynced} not synced)</span>
+                                )}
+                            </p>
+                        )}
                     </div>
-                    <button
-                        onClick={() => openModal()}
-                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Add New App
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleSync}
+                            disabled={syncing}
+                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                            title="Sync all active apps to store"
+                        >
+                            <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                            {syncing ? 'Syncing...' : 'Sync to Store'}
+                        </button>
+                        <button
+                            onClick={() => openModal()}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Add New App
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -264,11 +313,142 @@ const AppsCatalog: React.FC = () => {
     );
 };
 
+interface AssignedUser {
+    id: string;
+    full_name?: string;
+    email: string;
+}
+
+
+interface UserOption {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+// App Username Input with User Search Suggestions
+const AppUsernameInput: React.FC<{
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+}> = ({ value, onChange, placeholder }) => {
+    const [query, setQuery] = useState(value);
+    const [suggestions, setSuggestions] = useState<UserOption[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        setQuery(value);
+    }, [value]);
+
+    // Close suggestions on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Debounced search
+    useEffect(() => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        if (query.length < 1) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        setLoading(true);
+        debounceRef.current = setTimeout(async () => {
+            try {
+                const users = await usersApi.search(query, 5);
+                setSuggestions(users);
+                setShowSuggestions(true);
+            } catch {
+                setSuggestions([]);
+            } finally {
+                setLoading(false);
+            }
+        }, 300);
+
+        return () => {
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
+        };
+    }, [query]);
+
+    const handleSelect = (user: UserOption) => {
+        // Suggest username based on email or name
+        const suggestedUsername = user.email.split('@')[0] || user.name.toLowerCase().replace(/\s+/g, '.');
+        onChange(suggestedUsername);
+        setQuery(suggestedUsername);
+        setShowSuggestions(false);
+    };
+
+    return (
+        <div ref={wrapperRef} className="relative">
+            <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                    setQuery(e.target.value);
+                    onChange(e.target.value);
+                }}
+                onFocus={() => {
+                    if (suggestions.length > 0) {
+                        setShowSuggestions(true);
+                    }
+                }}
+                placeholder={placeholder}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {loading && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+            )}
+
+            {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b">
+                        User Suggestions (click to use as username)
+                    </div>
+                    {suggestions.map((user) => (
+                        <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => handleSelect(user)}
+                            className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 text-sm truncate">{user.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                <p className="text-xs text-blue-600 mt-1">
+                                    Suggested: {user.email.split('@')[0]}
+                                </p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const AppUsersModal: React.FC<{ app: AppTile, onClose: () => void }> = ({ app, onClose }) => {
-    const [assignedUsers, setAssignedUsers] = useState<any[]>([]);
-    const [availableUsers, setAvailableUsers] = useState<any[]>([]);
-    const [selectedUserId, setSelectedUserId] = useState('');
-    const [creds, setCreds] = useState({ username: '', password: '' });
+    const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>([]);
+    const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+    const [creds, setCreds] = useState({ appUsername: '', pin4: '' });
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -278,16 +458,10 @@ const AppUsersModal: React.FC<{ app: AppTile, onClose: () => void }> = ({ app, o
     const loadData = async () => {
         setLoading(true);
         try {
-            const [assignments, allUsers] = await Promise.all([
-                adminApi.getAppAssignedUsers(app.id),
-                usersApi.getAll()
-            ]);
+            const assignments = await adminApi.getAppAssignedUsers(app.id);
             setAssignedUsers(assignments);
-
-            const assignedIds = new Set(assignments.map((u: any) => u.id));
-            setAvailableUsers(allUsers.filter((u: any) => !assignedIds.has(u.id)));
-        } catch (error) {
-            console.error('Error loading users:', error);
+        } catch {
+            // Silent error
         } finally {
             setLoading(false);
         }
@@ -295,13 +469,16 @@ const AppUsersModal: React.FC<{ app: AppTile, onClose: () => void }> = ({ app, o
 
     const handleAssign = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedUser?.id) {
+            alert('Please select a user');
+            return;
+        }
         try {
-            await adminApi.assignAppToUser(selectedUserId, app.id, creds);
-            setSelectedUserId('');
-            setCreds({ username: '', password: '' });
+            await adminApi.assignAppToUser(selectedUser.id, app.id, creds);
+            setSelectedUser(null);
+            setCreds({ appUsername: '', pin4: '' });
             loadData();
-        } catch (error) {
-            console.error('Failed to assign user:', error);
+        } catch {
             alert('Failed to assign user');
         }
     };
@@ -311,8 +488,8 @@ const AppUsersModal: React.FC<{ app: AppTile, onClose: () => void }> = ({ app, o
         try {
             await adminApi.unassignAppFromUser(userId, app.id);
             loadData();
-        } catch (error) {
-            console.error('Failed to unassign:', error);
+        } catch {
+            // Silent error
         }
     };
 
@@ -335,39 +512,36 @@ const AppUsersModal: React.FC<{ app: AppTile, onClose: () => void }> = ({ app, o
                         <form onSubmit={handleAssign} className="flex flex-col md:flex-row gap-4 items-end">
                             <div className="flex-1 w-full">
                                 <label className="block text-xs font-medium text-gray-500 mb-1">Select User</label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                    value={selectedUserId}
-                                    onChange={e => setSelectedUserId(e.target.value)}
-                                    required
-                                >
-                                    <option value="">-- Choose User --</option>
-                                    {availableUsers.map(user => (
-                                        <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex-1 w-full">
-                                <label className="block text-xs font-medium text-gray-500 mb-1">App Username (Optional)</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                    value={creds.username}
-                                    onChange={e => setCreds({ ...creds, username: e.target.value })}
+                                <UserSearchAutocomplete
+                                    onSelect={setSelectedUser}
+                                    selectedUser={selectedUser}
+                                    onClear={() => setSelectedUser(null)}
+                                    placeholder="Type to search users by name or email..."
                                 />
                             </div>
                             <div className="flex-1 w-full">
-                                <label className="block text-xs font-medium text-gray-500 mb-1">App Password (Optional)</label>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">App Username (Optional)</label>
+                                <AppUsernameInput
+                                    value={creds.appUsername}
+                                    onChange={(value) => setCreds({ ...creds, appUsername: value })}
+                                    placeholder="Enter username or search users..."
+                                />
+                            </div>
+                            <div className="flex-1 w-full">
+                                <label className="block text-xs font-medium text-gray-500 mb-1">4-Digit PIN (Optional)</label>
                                 <input
-                                    type="password"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                    value={creds.password}
-                                    onChange={e => setCreds({ ...creds, password: e.target.value })}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]{4}"
+                                    maxLength={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono tracking-widest text-center"
+                                    value={creds.pin4}
+                                    onChange={e => setCreds({ ...creds, pin4: e.target.value.replace(/\D/g, '').slice(0, 4) })}
                                 />
                             </div>
                             <button
                                 type="submit"
-                                disabled={!selectedUserId}
+                                disabled={!selectedUser?.id}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
                                 Assign

@@ -6,7 +6,7 @@ import { adminApi } from '../../lib/api';
 interface AppRequest {
     id: string;
     reason: string;
-    status: 'PENDING' | 'APPROVED' | 'DENIED';
+    status: 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'DENIED';
     admin_note: string;
     deny_reason: string;
     created_at: string;
@@ -16,6 +16,7 @@ interface AppRequest {
     user_name: string;
     app_id: string;
     app_name: string;
+    app_identifier_or_name?: string;
     logo_url: string;
     icon_url: string;
     category: string;
@@ -45,8 +46,8 @@ const AppRequests: React.FC = () => {
             setLoading(true);
             const result = await adminApi.getRequests(statusFilter || undefined);
             setData(result);
-        } catch (error) {
-            console.error('Error fetching requests:', error);
+        } catch {
+            // Silent error
         } finally {
             setLoading(false);
         }
@@ -73,26 +74,18 @@ const AppRequests: React.FC = () => {
             setActionType(null);
             setActionNote('');
             fetchRequests();
-        } catch (error: any) {
-            alert(error.message || 'Failed to process request');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to process request';
+            alert(message);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'APPROVED':
-                return <CheckCircle className="w-5 h-5 text-green-500" />;
-            case 'DENIED':
-                return <XCircle className="w-5 h-5 text-red-500" />;
-            default:
-                return <Clock className="w-5 h-5 text-yellow-500" />;
-        }
-    };
 
     const getStatusBadge = (status: string) => {
         const colors: Record<string, string> = {
+            SUBMITTED: 'bg-indigo-100 text-indigo-800',
             PENDING: 'bg-yellow-100 text-yellow-800',
             APPROVED: 'bg-green-100 text-green-800',
             DENIED: 'bg-red-100 text-red-800',
@@ -199,8 +192,13 @@ const AppRequests: React.FC = () => {
                                                 </div>
                                             )}
                                             <div className="ml-3">
-                                                <p className="text-sm font-medium text-gray-900">{req.app_name}</p>
-                                                <p className="text-xs text-gray-500">{req.category}</p>
+                                                <div className="flex items-center">
+                                                    <p className="text-sm font-medium text-gray-900">{req.app_name || req.app_identifier_or_name || 'Unknown App'}</p>
+                                                    {!req.app_id && (
+                                                        <span className="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold uppercase rounded">Custom</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-500">{req.category || 'User Requested'}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -216,7 +214,7 @@ const AppRequests: React.FC = () => {
                                         {new Date(req.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        {req.status === 'PENDING' ? (
+                                        {['SUBMITTED', 'PENDING'].includes(req.status) ? (
                                             <div className="flex justify-end space-x-2">
                                                 <button
                                                     onClick={() => {
@@ -308,8 +306,8 @@ const AppRequests: React.FC = () => {
                                     type="submit"
                                     disabled={submitting}
                                     className={`flex-1 px-4 py-2 text-white rounded-lg disabled:opacity-50 ${actionType === 'approve'
-                                            ? 'bg-green-600 hover:bg-green-700'
-                                            : 'bg-red-600 hover:bg-red-700'
+                                        ? 'bg-green-600 hover:bg-green-700'
+                                        : 'bg-red-600 hover:bg-red-700'
                                         }`}
                                 >
                                     {submitting ? 'Processing...' : actionType === 'approve' ? 'Approve' : 'Deny'}

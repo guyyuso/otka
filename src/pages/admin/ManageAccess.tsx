@@ -11,10 +11,24 @@ interface UserOption {
     role: string;
 }
 
+interface AppAssignment {
+    id: string;
+    app_id: string;
+    name: string;
+    logo_url?: string;
+    auth_type?: string;
+}
+
+interface AppTile {
+    id: string;
+    name: string;
+    logo_url?: string;
+}
+
 const ManageAccess: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
-    const [assignedApps, setAssignedApps] = useState<any[]>([]);
-    const [availableApps, setAvailableApps] = useState<any[]>([]);
+    const [assignedApps, setAssignedApps] = useState<AppAssignment[]>([]);
+    const [availableApps, setAvailableApps] = useState<AppTile[]>([]);
     const [selectedAppId, setSelectedAppId] = useState('');
     const [creds, setCreds] = useState({ username: '', pin: '' });
     const [loading, setLoading] = useState(false);
@@ -38,10 +52,10 @@ const ManageAccess: React.FC = () => {
                 adminApi.getAppTiles()
             ]);
             setAssignedApps(assignments);
-            const assignedIds = new Set(assignments.map((a: any) => a.app_id));
-            setAvailableApps(allApps.filter((a: any) => !assignedIds.has(a.id)));
-        } catch (error) {
-            console.error('Error loading apps:', error);
+            const assignedIds = new Set(assignments.map((a: AppAssignment) => a.app_id));
+            setAvailableApps(allApps.filter((a: AppTile) => !assignedIds.has(a.id)));
+        } catch {
+            // Silent error - will show empty app lists
         } finally {
             setLoading(false);
         }
@@ -67,8 +81,7 @@ const ManageAccess: React.FC = () => {
             setSelectedAppId('');
             loadUserApps();
             alert('App assigned successfully!');
-        } catch (error) {
-            console.error('Failed to assign app:', error);
+        } catch {
             alert('Failed to assign app');
         }
     };
@@ -78,8 +91,8 @@ const ManageAccess: React.FC = () => {
         try {
             await adminApi.unassignAppFromUser(selectedUser.id, appId);
             loadUserApps();
-        } catch (error) {
-            console.error('Failed to unassign:', error);
+        } catch {
+            // Silent error - user can retry
         }
     };
 

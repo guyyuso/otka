@@ -3,8 +3,23 @@ import { Settings, Save, Lock, Globe, AlertTriangle } from 'lucide-react';
 import Header from '../../components/Header';
 import { adminApi } from '../../lib/api';
 
+interface GeneralSettings {
+    maintenanceMode: boolean;
+    allowRegistration: boolean;
+}
+
+interface SecuritySettings {
+    maxLoginAttempts: number;
+    sessionTimeout: number;
+}
+
+interface Settings {
+    general: GeneralSettings;
+    security: SecuritySettings;
+}
+
 const SystemSettings: React.FC = () => {
-    const [settings, setSettings] = useState<any>({
+    const [settings, setSettings] = useState<Settings>({
         general: { maintenanceMode: false, allowRegistration: true },
         security: { maxLoginAttempts: 5, sessionTimeout: 60 }
     });
@@ -20,24 +35,23 @@ const SystemSettings: React.FC = () => {
         try {
             setLoading(true);
             const data = await adminApi.getSettings();
-            // Ensure defaults if empty
-            setSettings((prev: any) => ({ ...prev, ...data }));
-        } catch (error) {
-            console.error('Error fetching settings:', error);
+            setSettings(prev => ({ ...prev, ...data }));
+        } catch {
+            // Silent error - uses defaults
         } finally {
             setLoading(false);
         }
     };
 
-    const handleGeneralChange = (key: string, value: any) => {
-        setSettings((prev: any) => ({
+    const handleGeneralChange = (key: keyof GeneralSettings, value: boolean) => {
+        setSettings(prev => ({
             ...prev,
             general: { ...prev.general, [key]: value }
         }));
     };
 
-    const handleSecurityChange = (key: string, value: any) => {
-        setSettings((prev: any) => ({
+    const handleSecurityChange = (key: keyof SecuritySettings, value: number) => {
+        setSettings(prev => ({
             ...prev,
             security: { ...prev.security, [key]: value }
         }));
@@ -48,7 +62,6 @@ const SystemSettings: React.FC = () => {
             setSaving(true);
             setMessage(null);
 
-            // Save generalized settings separately if needed, passing the whole object for each key
             await Promise.all([
                 adminApi.updateSettings('general', settings.general),
                 adminApi.updateSettings('security', settings.security)
@@ -56,8 +69,7 @@ const SystemSettings: React.FC = () => {
 
             setMessage({ type: 'success', text: 'Settings saved successfully' });
             setTimeout(() => setMessage(null), 3000);
-        } catch (error) {
-            console.error('Error saving settings:', error);
+        } catch {
             setMessage({ type: 'error', text: 'Failed to save settings' });
         } finally {
             setSaving(false);

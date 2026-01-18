@@ -75,6 +75,13 @@ export const authApi = {
         }
     },
 
+    changePassword: async (currentPassword: string, newPassword: string) => {
+        return apiRequest('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword, newPassword }),
+        });
+    },
+
     getMe: async () => {
         return apiRequest('/auth/me');
     },
@@ -284,6 +291,74 @@ export const storeApi = {
 
     getMyRequests: async () => {
         return apiRequest('/store/my/requests');
+    },
+};
+
+// Requests API (for missing apps)
+export const requestsApi = {
+    create: async (data: {
+        app_identifier_or_name: string;
+        business_justification: string;
+        cost_center?: string;
+        priority?: string;
+        desired_by_date?: string;
+        notes?: string;
+    }) => {
+        return apiRequest('/requests', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    getAll: async (status?: string) => {
+        const query = status ? `?status=${status}` : '';
+        try {
+            return await apiRequest(`/requests${query}`);
+        } catch (error: any) {
+            console.error('Requests API error:', error);
+            throw error;
+        }
+    },
+
+    get: async (id: string) => {
+        return apiRequest(`/requests/${id}`);
+    },
+
+    cancel: async (id: string) => {
+        return apiRequest(`/requests/${id}`, { method: 'DELETE' });
+    },
+};
+
+// Catalog Sync API (admin only)
+export const catalogSyncApi = {
+    sync: async () => {
+        return apiRequest('/catalog/sync', { method: 'POST' });
+    },
+
+    getLogs: async () => {
+        return apiRequest('/catalog/sync/logs');
+    },
+
+    getStatus: async () => {
+        return apiRequest('/catalog/sync/status');
+    },
+
+    updateSettings: async (settings: { sync_enabled?: boolean; frequency_hours?: number }) => {
+        return apiRequest('/catalog/sync/settings', {
+            method: 'PUT',
+            body: JSON.stringify(settings),
+        });
+    },
+};
+
+// Store Sync API (sync catalog to store)
+export const storeSyncApi = {
+    sync: async () => {
+        return apiRequest('/store/sync', { method: 'POST' });
+    },
+
+    getStatus: async () => {
+        return apiRequest('/store/sync/status');
     },
 };
 

@@ -40,8 +40,8 @@ const NotesPage: React.FC = () => {
         setNotes('');
         setExistingNoteId(null);
       }
-    } catch (error) {
-      console.error('Error loading notes:', error);
+    } catch {
+      // Silent error - notes will remain empty
     }
   };
 
@@ -55,8 +55,8 @@ const NotesPage: React.FC = () => {
         setExistingNoteId(data.id);
       }
       setLastSaved(new Date());
-    } catch (error) {
-      console.error('Error saving notes:', error);
+    } catch {
+      // Silent error - save failed, user can retry
     } finally {
       setIsLoading(false);
     }

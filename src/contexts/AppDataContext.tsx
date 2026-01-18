@@ -45,10 +45,34 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       const [data, assignedData] = await Promise.all([
         applicationsApi.getAll(),
-        (applicationsApi as any).getAssigned().catch(() => []) // Handle potential failures gracefully
+        (applicationsApi as { getAssigned?: () => Promise<unknown[]> }).getAssigned?.().catch(() => []) ?? []
       ]);
 
-      const apps: AppData[] = (data || []).map((app: any) => ({
+      interface RawApp {
+        id: string;
+        name: string;
+        logo_url?: string;
+        url: string;
+        username?: string;
+        password?: string;
+        last_used?: string;
+        category?: string;
+      }
+
+      interface RawAssignedApp {
+        id: string;
+        app_tile_id?: string;
+        name: string;
+        logo_url?: string;
+        url?: string;
+        launch_url?: string;
+        app_username?: string;
+        category?: string;
+        auth_type?: string;
+        requires_pin?: boolean;
+      }
+
+      const apps: AppData[] = (data || []).map((app: RawApp) => ({
         id: app.id,
         name: app.name,
         logo: app.logo_url || '',
@@ -60,18 +84,18 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isPersonal: true
       }));
 
-      const assigned: AppData[] = (assignedData || []).map((app: any) => ({
-        id: `assigned-${app.id}`, // specific ID to avoid collision
-        appTileId: app.app_tile_id || app.id, // actual app tile ID for PIN verification
+      const assigned: AppData[] = ((assignedData || []) as RawAssignedApp[]).map((app) => ({
+        id: `assigned-${app.id}`,
+        appTileId: app.app_tile_id || app.id,
         name: app.name,
         logo: app.logo_url || '',
-        url: app.url || app.launch_url,
+        url: app.url || app.launch_url || '',
         username: app.app_username || '',
-        password: '', // No password, use PIN instead
+        password: '',
         category: app.category,
-        authType: app.auth_type,
+        authType: app.auth_type as AppData['authType'],
         isAssigned: true,
-        requiresPin: app.requires_pin ?? true // Default to requiring PIN
+        requiresPin: app.requires_pin ?? true
       }));
 
       // Split into recently used (last 7 days) and main apps
@@ -91,8 +115,8 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setRecentlyUsed(recent);
       setMainApps(main);
       setAssignedApps(assigned);
-    } catch (error) {
-      console.error('Error fetching apps:', error);
+    } catch {
+      // Silent error - apps will be empty
       setRecentlyUsed([]);
       setMainApps([]);
       setAssignedApps([]);
@@ -118,7 +142,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       await fetchApps();
     } catch (error) {
-      console.error('Error adding app:', error);
       throw error;
     }
   };
@@ -132,10 +155,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await applicationsApi.delete(appId);
       await fetchApps();
     } catch (error) {
-      console.error('Error removing app:', error);
       throw error;
     }
   };
+
+  type UpdatePayload = Record<string, string | undefined>;
 
   const updateApp = async (appId: string, data: Partial<AppData>): Promise<void> => {
     if (!user || !isAuthenticated) {
@@ -143,7 +167,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
-      const updateData: any = {};
+      const updateData: UpdatePayload = {};
       if (data.name !== undefined) updateData.name = data.name;
       if (data.url !== undefined) updateData.url = data.url;
       if (data.logo !== undefined) updateData.logoUrl = data.logo;
@@ -154,7 +178,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await applicationsApi.update(appId, updateData);
       await fetchApps();
     } catch (error) {
-      console.error('Error updating app:', error);
       throw error;
     }
   };
@@ -167,7 +190,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await applicationsApi.access(appId);
 
-      // Update local state
       const updateAppInList = (apps: AppData[]) =>
         apps.map(app =>
           app.id === appId
@@ -177,8 +199,8 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       setRecentlyUsed(prev => updateAppInList(prev));
       setMainApps(prev => updateAppInList(prev));
-    } catch (error) {
-      console.error('Error updating last used:', error);
+    } catch {
+      // Silent error
     }
   };
 

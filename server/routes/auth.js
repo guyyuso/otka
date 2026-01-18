@@ -165,6 +165,120 @@ router.post('/logout', async (req, res) => {
     res.json({ message: 'Logged out successfully' });
 });
 
+// Password validation function
+const validatePassword = (password) => {
+    const errors = [];
+    
+    if (password.length < 5) {
+        errors.push('Password must be at least 5 characters long');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/[0-9]/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+    
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+};
+
+// Change password
+router.post('/change-password', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+    
+    // Validate new password
+    const validation = validatePassword(newPassword);
+    if (!validation.isValid) {
+        return res.status(400).json({ 
+            error: 'Password does not meet requirements',
+            details: validation.errors
+        });
+    }
+    
+    try {
+        // Verify token and get user
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Get user with password hash
+        const userResult = await pool.query(
+            'SELECT id, password_hash FROM users WHERE id = $1',
+            [decoded.userId]
+        );
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const user = userResult.rows[0];
+        
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+        
+        // Check if new password is different from current
+        const isSamePassword = await bcrypt.compare(newPassword, user.password_hash);
+        if (isSamePassword) {
+            return res.status(400).json({ error: 'New password must be different from current password' });
+        }
+        
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const newPasswordHash = await bcrypt.hash(newPassword, salt);
+        
+        // Update password
+        await pool.query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            [newPasswordHash, user.id]
+        );
+        
+        // Invalidate all existing sessions (force re-login for security)
+        await pool.query(
+            'DELETE FROM sessions WHERE user_id = $1',
+            [user.id]
+        );
+        
+        // Audit log
+        await pool.query(
+            'INSERT INTO audit_logs (actor_id, action, target_id, details, ip_address) VALUES ($1, $2, $3, $4, $5)',
+            [user.id, 'password.changed', user.id, JSON.stringify({ changed_at: new Date().toISOString() }), req.ip]
+        );
+        
+        res.json({ message: 'Password changed successfully. Please log in again.' });
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Invalid or expired token' });
+        }
+        console.error('Password change error:', error);
+        res.status(500).json({ error: 'An error occurred while changing password' });
+    }
+});
+
 // Get current user (verify token)
 router.get('/me', async (req, res) => {
     const authHeader = req.headers.authorization;

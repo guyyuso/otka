@@ -23,8 +23,8 @@ const UsersManagement: React.FC = () => {
       setLoading(true);
       const data = await usersApi.getAll();
       setUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch {
+      // Silent error - users list will be empty
     } finally {
       setLoading(false);
     }
@@ -34,8 +34,8 @@ const UsersManagement: React.FC = () => {
     try {
       await usersApi.update(userId, { role: newRole });
       await fetchUsers();
-    } catch (error) {
-      console.error('Error updating user role:', error);
+    } catch {
+      // Silent error
     }
   };
 
@@ -43,8 +43,8 @@ const UsersManagement: React.FC = () => {
     try {
       await usersApi.update(userId, { status: newStatus });
       await fetchUsers();
-    } catch (error) {
-      console.error('Error updating user status:', error);
+    } catch {
+      // Silent error
     }
   };
 
@@ -56,8 +56,8 @@ const UsersManagement: React.FC = () => {
     try {
       await usersApi.delete(userId);
       await fetchUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
+    } catch {
+      // Silent error
     }
   };
 
@@ -162,9 +162,23 @@ const UsersManagement: React.FC = () => {
     );
   };
 
+  interface AppAssignment {
+    id: string;
+    app_id: string;
+    name: string;
+    logo_url?: string;
+    auth_type?: string;
+  }
+
+  interface AppTile {
+    id: string;
+    name: string;
+    auth_type?: string;
+  }
+
   const UserAppsModal: React.FC = () => {
-    const [assignedApps, setAssignedApps] = useState<any[]>([]);
-    const [availableApps, setAvailableApps] = useState<any[]>([]);
+    const [assignedApps, setAssignedApps] = useState<AppAssignment[]>([]);
+    const [availableApps, setAvailableApps] = useState<AppTile[]>([]);
     const [selectedAppId, setSelectedAppId] = useState('');
     const [creds, setCreds] = useState({ username: '', pin: '' });
     const [loadingAssignments, setLoadingAssignments] = useState(false);
@@ -186,10 +200,10 @@ const UsersManagement: React.FC = () => {
         ]);
         setAssignedApps(assignments);
         // Filter out apps already assigned
-        const assignedIds = new Set(assignments.map((a: any) => a.app_id));
-        setAvailableApps(allApps.filter((a: any) => !assignedIds.has(a.id)));
-      } catch (error) {
-        console.error('Error loading user apps:', error);
+        const assignedIds = new Set(assignments.map((a: AppAssignment) => a.app_id));
+        setAvailableApps(allApps.filter((a: AppTile) => !assignedIds.has(a.id)));
+      } catch {
+        // Silent error
       } finally {
         setLoadingAssignments(false);
       }
@@ -216,8 +230,7 @@ const UsersManagement: React.FC = () => {
         setSelectedAppId('');
         loadData();
         alert('App assigned successfully!');
-      } catch (error) {
-        console.error('Failed to assign app:', error);
+      } catch {
         alert('Failed to assign app');
       }
     };
@@ -227,8 +240,8 @@ const UsersManagement: React.FC = () => {
       try {
         await adminApi.unassignAppFromUser(managingUser.id, appId);
         loadData();
-      } catch (error) {
-        console.error('Failed to unassign app:', error);
+      } catch {
+        // Silent error
       }
     };
 
@@ -377,8 +390,8 @@ const UsersManagement: React.FC = () => {
         await fetchUsers();
         setShowEditModal(false);
         setSelectedUser(null);
-      } catch (error) {
-        console.error('Error updating user:', error);
+      } catch {
+        // Silent error
       }
     };
 

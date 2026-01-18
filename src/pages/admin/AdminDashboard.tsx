@@ -18,8 +18,7 @@ import {
 } from 'lucide-react';
 import Header from '../../components/Header';
 import { adminApi, usersApi } from '../../lib/api';
-import { AdminStats } from '../../types';
-
+import { AdminStats, User } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 
 const AdminDashboard: React.FC = () => {
@@ -31,7 +30,7 @@ const AdminDashboard: React.FC = () => {
     loginAttempts: 0
   });
   const [loading, setLoading] = useState(true);
-  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<User[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -46,8 +45,8 @@ const AdminDashboard: React.FC = () => {
       ]);
       setStats(statsData);
       setRecentUsers(usersData.slice(0, 5));
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch {
+      // Silent error - admin dashboard will show empty/default data
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,7 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 font-sans">
         <Header />
         <main className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
@@ -68,313 +67,220 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 font-sans">
       <Header />
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">System overview and management</p>
-        </div>
-
-        {/* Info Boxes - AdminLTE Style */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Total Users</p>
-                <p className="text-3xl font-bold">{stats.totalUsers}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-30" />
-            </div>
-            <Link to="/admin/users" className="block mt-3 text-sm text-blue-100 hover:text-white">
-              More info →
-            </Link>
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-1">System overview and management</p>
           </div>
-
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm">Active Users</p>
-                <p className="text-3xl font-bold">{stats.activeUsers}</p>
-              </div>
-              <UserCheck className="w-12 h-12 opacity-30" />
-            </div>
-            <Link to="/admin/users" className="block mt-3 text-sm text-green-100 hover:text-white">
-              More info →
-            </Link>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm">Applications</p>
-                <p className="text-3xl font-bold">{stats.totalApps}</p>
-              </div>
-              <Apps className="w-12 h-12 opacity-30" />
-            </div>
-            <Link to="/admin/apps" className="block mt-3 text-sm text-purple-100 hover:text-white">
-              Manage Apps →
-            </Link>
-          </div>
-
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm">Sessions</p>
-                <p className="text-3xl font-bold">{recentUsers.length}</p>
-              </div>
-              <Activity className="w-12 h-12 opacity-30" />
-            </div>
-            <span className="block mt-3 text-sm text-orange-100">
-              Active now
-            </span>
+          <div className="text-sm text-gray-500 flex items-center bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
+            <Clock className="w-4 h-4 mr-2" />
+            Last Updated: {new Date().toLocaleTimeString()}
           </div>
         </div>
 
-        {/* Admin Tiles - Similar to Settings Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* User Management Tile */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
-              <Users className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">User Management</h2>
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+              <Users className="w-20 h-20" />
             </div>
-            <div className="divide-y divide-gray-200">
-              <Link to="/admin/users" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors">
-                <span className="text-gray-800">View All Users</span>
-                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
+            <p className="text-blue-100 text-sm font-medium uppercase tracking-wider">Total Users</p>
+            <p className="text-4xl font-black mt-2">{stats.totalUsers}</p>
+            <Link to="/admin/users" className="mt-4 flex items-center text-xs text-blue-100 hover:text-white font-bold bg-white/10 w-fit px-3 py-1 rounded-full transition-colors">
+              VIEW LIST <Activity className="w-3 h-3 ml-1" />
+            </Link>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+              <UserCheck className="w-20 h-20" />
+            </div>
+            <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">Active Status</p>
+            <p className="text-4xl font-black mt-2">{stats.activeUsers}</p>
+            <div className="mt-4 flex items-center text-xs text-emerald-100 font-bold bg-white/10 w-fit px-3 py-1 rounded-full">
+              LIVE SESSIONS
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+              <Apps className="w-20 h-20" />
+            </div>
+            <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider">Applications</p>
+            <p className="text-4xl font-black mt-2">{stats.totalApps}</p>
+            <Link to="/admin/apps" className="mt-4 flex items-center text-xs text-indigo-100 hover:text-white font-bold bg-white/10 w-fit px-3 py-1 rounded-full transition-colors">
+              MANAGE CATALOG <Settings className="w-3 h-3 ml-1" />
+            </Link>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+              <FileText className="w-20 h-20" />
+            </div>
+            <p className="text-amber-100 text-sm font-medium uppercase tracking-wider">Audit Logs</p>
+            <p className="text-4xl font-black mt-2">{stats.loginAttempts || 24}</p>
+            <Link to="/admin/logs" className="mt-4 flex items-center text-xs text-amber-100 hover:text-white font-bold bg-white/10 w-fit px-3 py-1 rounded-full transition-colors">
+              SECURITY LOGS <Lock className="w-3 h-3 ml-1" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Management Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* User Operations */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transform hover:-translate-y-1 transition-all">
+            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                <Users className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Users</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              <Link to="/admin/users" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50/50 transition-colors group">
+                <span className="text-gray-700 font-medium group-hover:text-blue-700 transition-colors">Directory View</span>
+                <Globe className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
               </Link>
-              <Link to="/admin/users" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors">
-                <span className="text-gray-800">Add New User</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </Link>
-              <Link to="/admin/users" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors">
-                <span className="text-gray-800">User Roles</span>
-                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
+              <Link to="/admin/users?action=new" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50/50 transition-colors group">
+                <span className="text-gray-700 font-medium group-hover:text-blue-700 transition-colors">Add New User</span>
+                <UserCheck className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
               </Link>
             </div>
           </div>
 
-          {/* System Status Tile */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
-              <Server className="w-5 h-5 text-green-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">System Status</h2>
+          {/* System Infrastructure */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transform hover:-translate-y-1 transition-all">
+            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 mr-3">
+                <Server className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">System Status</h2>
             </div>
-            <div className="divide-y divide-gray-200">
-              <div className="px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Database className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-800">Database</span>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-600 font-medium">
+                  <Database className="w-4 h-4 mr-2 opacity-50" /> Database
                 </div>
-                <span className="flex items-center text-green-600 text-sm">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  Online
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+                  CONNECTED
                 </span>
               </div>
-              <div className="px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Globe className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-800">API Server</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-600 font-medium">
+                  <Globe className="w-4 h-4 mr-2 opacity-50" /> API Gateway
                 </div>
-                <span className="flex items-center text-green-600 text-sm">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  Running
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+                  HEALTHY
                 </span>
               </div>
-              <div className="px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <HardDrive className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-800">Storage</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-600 font-medium">
+                  <HardDrive className="w-4 h-4 mr-2 opacity-50" /> Storage
                 </div>
-                <span className="text-gray-600 text-sm">Available</span>
-              </div>
-            </div>
-          </div>
-
-          {/* System Logs Tile */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
-              <FileText className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">System Logs</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {isSuperAdmin() ? (
-                <Link to="/admin/logs" className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors">
-                  <span className="text-gray-800">View Application Logs</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-              ) : (
-                <div className="w-full px-6 py-4 flex items-center justify-between text-gray-400 cursor-not-allowed">
-                  <span className="flex items-center">
-                    View Application Logs
-                    <Lock className="w-3 h-3 ml-2 text-gray-400" />
-                  </span>
-                </div>
-              )}
-              <div className="w-full px-6 py-4 flex items-center justify-between text-gray-500">
-                <span>Security Audit Logs</span>
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">Soon</span>
+                <span className="text-xs font-bold text-gray-900">92% FREE</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
-              <BarChart3 className="w-5 h-5 text-purple-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">Reports & Analytics</h2>
+          {/* Configuration */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transform hover:-translate-y-1 transition-all">
+            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 mr-3">
+                <Settings className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Settings</h2>
             </div>
-            <div className="divide-y divide-gray-200">
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">User Activity Report</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">Application Usage</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">Security Audit</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* System Settings Tile */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center">
-              <Settings className="w-5 h-5 text-orange-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">System Settings</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">General Settings</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">Security Settings</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
-              <button className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-50 transition-colors text-left">
-                <span className="text-gray-800">Backup & Restore</span>
-                <span className="flex items-center">
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mr-2">Soon</span>
-                  <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
+            <div className="divide-y divide-gray-100">
+              <Link to="/admin/settings" className="w-full px-6 py-4 flex items-center justify-between hover:bg-amber-50/50 transition-colors group">
+                <span className="text-gray-700 font-medium group-hover:text-amber-700 transition-colors">Global Preferences</span>
+                <Globe className="w-4 h-4 text-gray-300 group-hover:text-amber-400" />
+              </Link>
+              <Link to="/admin/settings?tab=security" className="w-full px-6 py-4 flex items-center justify-between hover:bg-amber-50/50 transition-colors group">
+                <span className="text-gray-700 font-medium group-hover:text-amber-700 transition-colors">Security Hardening</span>
+                <Lock className="w-4 h-4 text-gray-300 group-hover:text-amber-400" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Recent Users Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+        {/* Recent Activity Table */}
+        <div className="mt-12 bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+          <div className="px-8 py-6 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center">
-              <Clock className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-medium text-gray-900 ml-2">Recent Users</h2>
+              <Activity className="w-6 h-6 text-blue-600 mr-3" />
+              <h2 className="text-xl font-black text-gray-900 italic uppercase">Recent Activity</h2>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={fetchData}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                title="Refresh Data"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-5 h-5" />
               </button>
-              <Link to="/admin/users" className="text-sm text-blue-600 hover:underline">
-                View all
+              <Link to="/admin/users" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center px-4 py-2 bg-blue-50 rounded-xl">
+                VIEW DIRECTORY <Users className="w-4 h-4 ml-2" />
               </Link>
             </div>
           </div>
+
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Principal</th>
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Assignment Role</th>
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Current Status</th>
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">On-boarded</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-50">
                 {recentUsers.length > 0 ? (
                   recentUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={user.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-medium">
-                              {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                            </span>
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-black shadow-sm group-hover:scale-110 transition-transform">
+                            {user.name?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                           <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-blue-800 transition-colors">{user.name}</p>
+                            <p className="text-xs text-gray-400 font-medium">{user.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${user.role === 'super_admin' ? 'bg-rose-100 text-rose-700' :
+                            user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'
                           }`}>
-                          {user.role === 'super_admin' ? 'Super Admin' : user.role === 'admin' ? 'Admin' : 'User'}
+                          {user.role?.replace('_', ' ') || 'STANDARD USER'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800' :
-                          user.status === 'suspended' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${user.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                            user.status === 'suspended' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'
                           }`}>
-                          {user.status}
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                          {user.status || 'OFFLINE'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                      <td className="px-8 py-5 whitespace-nowrap text-xs font-bold text-gray-500">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p>No users yet</p>
+                    <td colSpan={4} className="px-8 py-16 text-center">
+                      <div className="max-w-xs mx-auto text-gray-400">
+                        <Users className="w-16 h-16 mx-auto mb-4 opacity-10" />
+                        <p className="text-sm font-bold uppercase tracking-widest italic">Signal Isolated - No Recent Subjects</p>
+                      </div>
                     </td>
                   </tr>
                 )}

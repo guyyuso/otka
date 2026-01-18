@@ -39,9 +39,15 @@ router.get('/search', authMiddleware, adminMiddleware, async (req, res) => {
              FROM users 
              WHERE (full_name ILIKE $1 OR email ILIKE $1)
              AND status = 'active'
-             ORDER BY full_name ASC
-             LIMIT $2`,
-            [`${q}%`, parseInt(limit)]
+             ORDER BY 
+                CASE 
+                    WHEN full_name ILIKE $2 THEN 1
+                    WHEN email ILIKE $2 THEN 2
+                    ELSE 3
+                END,
+                full_name ASC
+             LIMIT $3`,
+            [`%${q}%`, `${q}%`, parseInt(limit)]
         );
 
         res.json(result.rows.map(user => ({

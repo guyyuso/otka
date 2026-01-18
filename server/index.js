@@ -15,6 +15,9 @@ import storeRoutes from './routes/store.js';
 import adminRequestsRoutes from './routes/admin_requests.js';
 import analyticsRoutes from './routes/analytics.js';
 import dashboardRoutes from './routes/dashboard.js';
+import catalogSyncRoutes from './routes/catalog_sync.js';
+import requestsRoutes from './routes/requests.js';
+import storeSyncRoutes from './routes/store_sync.js';
 
 dotenv.config();
 
@@ -51,10 +54,13 @@ app.use('/api/files', filesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/apps', adminAppsRoutes);
 app.use('/api/admin/assignments', adminAssignmentsRoutes);
+app.use('/api/store', storeSyncRoutes); // Store sync routes (must be before general store routes)
 app.use('/api/store', storeRoutes);
 app.use('/api/admin/requests', adminRequestsRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/catalog', catalogSyncRoutes);
+app.use('/api/requests', requestsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

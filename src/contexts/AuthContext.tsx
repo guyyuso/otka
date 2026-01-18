@@ -29,8 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const data = await authApi.getMe();
           setUser(data.user);
           setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Failed to get current user:', error);
+        } catch {
+          // Token invalid, clear it
           setAuthToken(null);
         }
       }
@@ -57,9 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
       setIsAuthenticated(true);
       return {};
-    } catch (error: any) {
-      console.error('Login error:', error);
-      return { error: error.message || 'An unexpected error occurred. Please try again.' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
+      return { error: message };
     } finally {
       setLoading(false);
     }
@@ -85,9 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
       setIsAuthenticated(true);
       return {};
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      return { error: error.message || 'An unexpected error occurred during registration. Please try again.' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred during registration. Please try again.';
+      return { error: message };
     } finally {
       setLoading(false);
     }
@@ -99,8 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authApi.logout();
       setUser(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // Silent error - user is logged out anyway
     } finally {
       setLoading(false);
     }

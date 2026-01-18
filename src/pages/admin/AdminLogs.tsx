@@ -10,7 +10,7 @@ interface AuditLog {
     actor_email?: string;
     action: string;
     target_id: string;
-    details: any;
+    details: Record<string, unknown>;
     ip_address: string;
     created_at: string;
 }
@@ -23,7 +23,7 @@ const AdminLogs: React.FC = () => {
     useEffect(() => {
         fetchLogs();
 
-        let interval: any;
+        let interval: ReturnType<typeof setInterval> | undefined;
         if (autoRefresh) {
             interval = setInterval(fetchLogs, 5000);
         }
@@ -36,12 +36,9 @@ const AdminLogs: React.FC = () => {
     const fetchLogs = async () => {
         try {
             setLoading(true);
-            // Try to get structured logs, fallback to text logs
             const data = await adminApi.getLogs();
             if (Array.isArray(data.logs)) {
-                // Parse text logs if needed
                 const parsed = data.logs.map((log: string, idx: number) => {
-                    // Try to extract info from log string format: "[LEVEL] timestamp - message"
                     const match = log.match(/\[(\w+)\]\s+(.+?)\s+-\s+(.+)/);
                     return {
                         id: `log-${idx}`,
@@ -54,8 +51,8 @@ const AdminLogs: React.FC = () => {
                 });
                 setLogs(parsed);
             }
-        } catch (error) {
-            console.error('Error fetching logs:', error);
+        } catch {
+            // Silent error
         } finally {
             setLoading(false);
         }
@@ -105,8 +102,8 @@ const AdminLogs: React.FC = () => {
                         <button
                             onClick={() => setAutoRefresh(!autoRefresh)}
                             className={`px-4 py-2 rounded-lg flex items-center text-sm font-medium transition-colors ${autoRefresh
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                                 }`}
                         >
                             <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -176,7 +173,7 @@ const AdminLogs: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="text-sm text-gray-600 max-w-xs truncate" title={JSON.stringify(log.details)}>
-                                                {log.details?.message || JSON.stringify(log.details).slice(0, 50)}
+                                                {String(log.details?.message || JSON.stringify(log.details).slice(0, 50))}
                                             </p>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

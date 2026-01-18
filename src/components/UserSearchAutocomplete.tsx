@@ -58,8 +58,8 @@ const UserSearchAutocomplete: React.FC<UserSearchAutocompleteProps> = ({
                 const users = await usersApi.search(query, 10);
                 setResults(users);
                 setIsOpen(true);
-            } catch (error) {
-                console.error('Search error:', error);
+            } catch {
+                // Silent error - just clear results on search failure
                 setResults([]);
             } finally {
                 setLoading(false);
@@ -138,8 +138,8 @@ const UserSearchAutocomplete: React.FC<UserSearchAutocompleteProps> = ({
                                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
                             </div>
                             <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${user.role === 'super_admin' ? 'bg-red-100 text-red-700' :
-                                    user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                        'bg-gray-100 text-gray-600'
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                    'bg-gray-100 text-gray-600'
                                 }`}>
                                 {user.role === 'super_admin' ? 'Super Admin' : user.role === 'admin' ? 'Admin' : 'User'}
                             </span>
